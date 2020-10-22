@@ -1,5 +1,5 @@
 ---
-title: "proposal"
+title: "Final Data Science Project Proposal"
 author: "Adam Brandt, Allan Juarez, John King, Lisa McDaniel, Colin Willenborg "
 date: "10/18/2020"
 output: html_document
@@ -9,38 +9,32 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-<font size="5">**DS 202 Fall 2020**
-<font size="5">**Team 2:**	
+## **DS 202 Fall 2020**
+## **Team 2:**	
 
 <font size = "4">
 Adam Brandt, Allan Juarez, John King, Lisa McDaniel, Colin Willenborg
 		
-<font size="5">**Data Source:**
+## **Data Source:**
 
 <font size = "4"> https://iowadot.gov/program_management/FINAL_2021-2025_5YrProg.pdf
 
-<font size = "5"> **Dataset Overview:**
-<font size = "4">
+## **Dataset Overview:**
 The 2021-2025 five-year plan is prepared by the Iowa Department of Transportation (Iowa DOT) and documents the projects planned on an annual basis for a period of five years, in this case 2021-2025.  It includes project location, county, work type, route and cost estimate.  The document is updated annually by removing completed projects, introducing new projects, revising project schedules and costs and rescheduling projects as needed.  It is annually approved by the Iowa DOT commission and provides transparency by being made available to the public.  Information in the five-year plan assists the Iowa DOT, local public agencies and the federal government in developing a budget, identify needs, project status, project length, documentation requirements, and staffing needs.  The document also makes it easier for organizations to compare estimated project costs with actual project costs, and track project costs/status over the years, across the state/county and by project.
 
-<font size = "4"> It should be noted that only the information for the Highway Program (pages 50 – 94) is being used for this project.  The five-year plan is originally created as a pdf and exported to an excel spreadsheet.  The conversion was a bit messy so quality assurance (QA) was done to ensure that project costs were correct and in the correct year.  Several columns were added to the dataset including Iowa DOT District, county latitude and longitude and projects reschedule in case the Highway Trust Funds becomes insolvent. 
+It should be noted that only the information for the Highway Program (pages 50 – 94) is being used for this project.  The five-year plan is originally created as a pdf and exported to an excel spreadsheet.  The conversion was a bit messy so quality assurance (QA) was done to ensure that project costs were correct and in the correct year.  Several columns were added to the dataset including Iowa DOT District, county latitude and longitude and projects reschedule in case the Highway Trust Funds becomes insolvent. 
 
-<font size = "5"> **Exploratory Analysis:** What questions can be answered from the dataset?
+## **Exploratory Analysis:** What questions can be answered from the dataset?
 
-<font size = "4">
-•	Type, number, Iowa DOT District, County, route, location and estimated costs    of projects planned between 2021 – 2025.  Where is the money going and how      much?
+•	Type, number, Iowa DOT District, County, route, location and estimated costs of projects planned between 2021 – 2025.  Where is the money going and how much? - Allan
 
-•	Work involving interchanges.  Impacts the level of project documentation and 
-  oversight.
+•	Work involving interchanges.  Impacts the level of project documentation and oversight. - John
 
-•	Projects < $100 million, projects > $100 million & < $500 million, major    
-  projects > $500 (probably won’t be any of these as they are usually   
-  constructed over more than 5 years).  Impacts the level of project 
-  documentation and oversight.
+•	Projects < $100 million, projects > $100 million & < $500 million, major projects > $500 (probably won’t be any of these as they are usually
+  constructed over more than 5 years).  Impacts the level of project documentation and oversight. - Adam
 
-•	Project types and costs between Iowa DOT Districts.
+•	Project types and costs between Iowa DOT Districts. - Colin 
 
-•	How many bridges are being constructed, replaced, reconstructed, maintained or   preserved? Asset management issue.  Culverts? 
+•	How many bridges are being constructed, replaced, reconstructed, maintained or   preserved? Asset management issue.  Culverts? - Lisa
 
-•	How many miles of pavement are being constructed, replaced, reconstructed,  
-  maintained or preserved? Asset management issue.
+•	How many miles of pavement are being constructed, replaced, reconstructed, maintained or preserved? Asset management issue. - Lisa
