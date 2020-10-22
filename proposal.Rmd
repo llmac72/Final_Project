@@ -28,13 +28,12 @@ It should be noted that only the information for the Highway Program (pages 50 �
 
 •	Type, number, Iowa DOT District, County, route, location and estimated costs of projects planned between 2021 – 2025.  Where is the money going and how much? - Allan
 
-•	Work involving interchanges.  Impacts the level of project documentation and oversight. - John
+•	What work types are associated with interchanges?  Costs? What routes are interchanges being proposed on?  - John
 
-•	Projects < $100 million, projects > $100 million & < $500 million, major projects > $500 (probably won’t be any of these as they are usually
-  constructed over more than 5 years).  Impacts the level of project documentation and oversight. - Adam
+•	Projects < $50 million, projects > $50 million & < $100 million, major projects > $100.  What is the most expenvie project in each District?  The least expensive?  - Adam
 
-•	Project types and costs between Iowa DOT Districts. - Colin 
+•	Project types and costs between Iowa DOT Districts and years. - Colin 
 
-•	How many bridges are being constructed, replaced, reconstructed, maintained or   preserved? CUlverts? What is the average cost by type of construction?  Is there a difference in cost between Districts?  Asset management issue.   - Lisa
+•	How many bridges are being constructed, replaced, reconstructed, maintained or   preserved? CUlverts? What is the average cost by type of construction?  Is there a difference in cost between Districts? - Lisa
 
-•	How many miles of pavement are being constructed, replaced, reconstructed, maintained or preserved? What is the cost per mile, by type of construction?  Is there a difference in cost per mile between Districts?  Asset management issue. - Lisa
+•	How many miles of pavement are being constructed, replaced, reconstructed, maintained or preserved? What is the cost per mile, by type of construction?  Is there a difference in cost per mile between Districts? - Lisa
