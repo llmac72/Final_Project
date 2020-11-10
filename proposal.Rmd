@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## **Team 2:**	
 
 <font size = "4">
-Adam Brandt, Allan Juarez, John King, Lisa McDaniel, Colin Willenborg
+Adam Brandt, Allan Juarez, John King, Lisa McDaniel, Colin Willenborg(Project Coordinator)
 		
 ## **Data Source:**
 
