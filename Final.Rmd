@@ -1,0 +1,41 @@
+---
+title: "Fianl_Project"
+author: "Lisa McDaniel"
+date: "11/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r message=FALSE}
+
+library(readxl)
+library(tidyverse)
+library(dplyr)
+
+FiveYear <- read_excel('C:/Users/lisa.mcdaniel/DS202/Final_Project/Final_Project/2021_2025_5YrProg_Highway_Program.xlsx')
+
+str(FiveYear) 
+names(FiveYear)
+
+FiveYear <- FiveYear %>% 
+  fill(Location, .direction = "down") %>% 
+  rename(District = `Iowa DOT District`, Route = `Project Route`, 
+         Work = `Type of Work`) %>%
+  group_by(County, District, Route, Location) %>%
+  fill(Miles, .direction = "down") %>%
+  mutate(District = as.numeric(District))
+  
+
+```
+
+
+
+```{r }
+
+```
+
