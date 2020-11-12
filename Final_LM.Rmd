@@ -1,0 +1,202 @@
+---
+title: "Final_LM"
+author: "Lisa McDaniel"
+date: "11/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load dataset and saved as *FiveYear*.  Filled *Location* and *Miles* for each record in the dataframe; renamed several columns.  Showing the first 6 rows of the dataframe in the output.
+
+```{r message=FALSE}
+
+library(readxl)
+library(tidyverse)
+library(dplyr)
+
+FiveYear <- read_excel('C:/Users/lisa.mcdaniel/DS202/Final_Project/Final_Project/2021_2025_5YrProg_Highway_Program.xlsx')
+
+FiveYear <- FiveYear %>% 
+  fill(Location, .direction = "down") %>% 
+  rename(District = `Iowa DOT District`, Route = `Project Route`, 
+         Work = `Type of Work`) %>%
+  group_by(County, District, Route, Location) %>%
+  fill(Miles, .direction = "down") %>%
+  mutate(District = as.numeric(District))
+
+head(FiveYear)
+
+```
+
+US map with Iowa filled in blue.
+
+```{r message=FALSE}
+
+states <- map_data('state')
+
+iowa <- c("iowa")
+
+states %>% ggplot(aes(x = long, y = lat)) + 
+  geom_path(aes(group = group)) + 
+  geom_polygon(fill="blue", data = filter(states, region %in% iowa)) 
+
+```
+
+ <font size="6"> **Bridge Assets**
+
+ <font size="4"> **How/do bridge/culvert work types related to the federal work types:  construction,  replacement, reconstruction, maintenance or preservation?**
+
+Created a dataframe containing only bridge and culvert projects list in the Iowa DOT's 5 Year Program and sorted the projects into the federal work types.  Named the dataframe *Bridge*.  SHowing the first 6 records of the dataframe in the output.
+
+```{r message=FALSE}
+
+Bridge <- FiveYear %>%
+  select(County, District, Route, Location, Miles, Work, `2021`,
+         `2022`, `2023`, `2024`, `2025`) %>%
+  filter(grepl(c("BRIDGE|CULVERT"), Work)) %>%
+  mutate(FedWork = str_replace_all(Work, c("BRIDGE PAINTING|BRIDGE CLEANING" = "Preservation",
+                                           "CULVERT EXTENSION|CULVERT REPAIR" = "Maintenance",
+                                           "BRIDGE DECK OVERLAY|BRIDGE REHABILITATION" = "Rehabilitation",
+                                           "BRIDGE REPLACEMENT|CULVERT REPLACEMENT|BRIDGE REMOVAL" = "Replacement",
+                                           "BRIDGE NEW|CULVERT NEW|PIPE CULVERTS|BRIDGE WIDENING" = "Construction")))
+  
+head(Bridge)
+
+```
+
+**How do funding levels in the 5 Year Program compare to those in the Asset Management Plan?** 
+
+```{r message=FALSE, fig.height=8, fig.width=12}
+
+
+Bri1 <- Bridge %>%
+  group_by(FedWork) %>%
+  summarise(`20215YrPlan` = sum(`2021`/1000, na.rm = TRUE),
+            `20225YrPlan` = sum(`2022`/1000, na.rm = TRUE), 
+            `20235YrPlan` = sum(`2023`/1000, na.rm = TRUE), 
+            `20245YrPlan` = sum(`2024`/1000, na.rm = TRUE),
+            `20255YrPlan` = sum(`2025`/1000, na.rm = TRUE)) %>%
+  add_column(`2021Asset` = c(43, 1, 5, 28, 133),
+             `2022Asset` = c(72, 1, 6, 32, 152),
+             `2023Asset` = c(17, 1, 5, 25, 119),
+             `2024Asset` = c(8, 1, 6, 32, 153),
+             `2025Asset` = c(25, 1, 6, 35, 163)) %>%
+  pivot_longer(`20215YrPlan`:`2025Asset`, names_to="Year", 
+               values_to = "Cost") %>%
+  mutate(Plan = str_replace_all(Year, c("20215YrPlan|20225YrPlan|20235YrPlan|20245YrPlan|20255YrPlan" = "5 Year",
+                                        "2021Asset|2022Asset|2023Asset|2024Asset|2025Asset" = "Asset Management"))) %>%
+  mutate(Year2 = str_replace_all(Year, c("20215YrPlan|2021Asset" = "2021", "20225YrPlan|2022Asset" ="2022", 
+                                        "20235YrPlan|2023Asset" = "2023", "20245YrPlan|2024Asset" = "2024", 
+                                        "20255YrPlan|2025Asset" = "2025"))) %>%
+  select(-Year) %>%
+  rename(Year = Year2) %>%
+  mutate(Year = as.numeric(Year))
+
+
+
+ggplot(Bri1, aes(Year, Cost, fill=Plan)) + 
+  geom_bar(stat='identity', position = "dodge") + 
+  ggtitle("Bridge Assets\n 5 Year Program vs Asset Management Plan") + 
+  labs(y="Cost, $Millions", x="") +
+  theme(axis.text.x = element_text(angle = 90, size = 10, vjust = 0.2, hjust = 1)) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.ticks.y=element_blank()) +
+  theme(axis.text.y = element_blank()) +
+  facet_wrap(~FedWork, scales = "free") +
+  geom_text(aes(x=Year,y=Cost,label=paste("$",Cost)), 
+            position = position_dodge(0.9), vjust=-0.5, hjust=0.6, size=2)
+ 
+```
+
+**Compare the five year total of the 5 Year Program to the Asset Management Plan.**
+
+```{r message=FALSE, fig.height=8, fig.width=12, fig.align='center'}
+
+Bri1a <- Bri1 %>%
+  group_by(FedWork, Plan) %>%
+  summarise(Cost = sum(Cost)) %>%
+  mutate(Cost = round(Cost, 2))
+
+Bri1b <- Bri1a %>%
+  group_by(Plan) %>%
+  summarise(FiveYear = sum(Cost))
+
+
+ggplot(Bri1a, aes(FedWork, Cost, fill = Plan)) + 
+  geom_bar(stat='identity', position="dodge") + 
+  ggtitle("Bridge Assets\n Funding Levels Over the 5 Year Period") + 
+  labs(x="", y="Cost, $Millions") +
+  theme(axis.text.x = element_text(angle = 90, size = 10, vjust = 0.2, hjust = 1)) +
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme(axis.ticks.y=element_blank()) +
+  theme(axis.text.y = element_blank()) +
+  geom_text(aes(x=FedWork,y=Cost,label=paste("$",Cost)), 
+            position = position_dodge(0.9), vjust=-0.5, hjust=0.6)
+
+```
+
+```{r}
+
+Bri1b
+
+```
+
+<font size="6">**Pavement Assets**
+ 
+<font size="4">**How many pavement projects are included in the federal work types:  construction, 
+replacement, reconstruction, maintenance or preservation?**
+
+```{r message=FALSE}
+
+Pavement <- FiveYear %>%
+  select(County, District, Route, Location, Miles, Work, `2021`,
+         `2022`, `2023`, `2024`, `2025`) %>%
+  filter(grepl(c("GRADE|PAVE|PAVING|PAVEMENT|GRADING|RIGHT|SLOPE|TRAFFIC|EROSION|BARRIER|MISCELLANEOUS|NOISE"), Work))
+
+head(Pavement)
+
+```
+
+**Compare the five year total of the 5 Year Program to the Asset Management Plan.**
+
+```{r message=FALSE}
+
+Pave1 <- Pavement %>%
+  pivot_longer('2021':'2025', names_to='Year', values_to='Cost') %>%
+  filter(Cost != "NA") %>%
+  group_by(Year) %>%
+  summarise(Cost = sum(Cost)/1000) %>%
+  mutate(Cost = round(Cost, 2)) %>%
+  add_column(Plan = c( "5 Year", "5 Year", "5 Year", "5 Year", "5 Year")) %>%
+  relocate(Plan) %>%
+  add_row(Cost = c(511, 388, 535, 478, 459), 
+          Plan = c("Asset Mgmt", "Asset Mgmt", "Asset Mgmt", "Asset Mgmt", "Asset Mgmt"), 
+          Year = c("2021", "2022", "2023", "2024", "2025"))
+
+Pave2 <- Pave1 %>%
+  group_by(Plan)%>%
+  summarise(Cost = sum(Cost))
+
+ggplot(Pave1, aes(Year, Cost, fill = Plan)) + 
+  geom_bar(stat='identity', position="dodge") + 
+  ggtitle("Pavement Assets\n Funding Levels Over the 5 Year Period") + 
+  labs(x="", y="Cost, $Millions") +
+  theme(axis.text.x = element_text(angle = 90, size = 10, vjust = 0.2, hjust = 1)) +
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme(axis.ticks.y=element_blank()) +
+  theme(axis.text.y = element_blank()) +
+  geom_text(aes(x=Year,y=Cost,label=paste("$",Cost)), 
+            position = position_dodge(0.9), vjust=-0.5, hjust=0.6)
+
+```
+
+
+
+```{r}
+
+Pave2
+
+```
