@@ -41,6 +41,23 @@ FiveYear <- FiveYear %>%
 * Type, number, Iowa DOT District, County, route, location and estimated costs of projects planned between 2021 – 2025.  Where is the money going and how much?
 
 ```{r }
+states <- map_data('state')
+us_counties <- map_data("county")
+
+twentyone <- FiveYear %>% 
+  select(County,'Latitude\r\n(Decimal(', "Longitude\r\n(Decimal)","2021") %>%
+  rename(year ="2021")%>%
+  mutate(subregion = tolower(County)) %>% 
+  group_by(subregion) %>% 
+  summarize(total = sum(year,na.rm=TRUE))
+
+ 
+iowa <- c("iowa")
+us_counties <- us_counties %>% filter(region %in% iowa)
+twentyone <- inner_join(twentyone, us_counties, by = "subregion")
+ twentyone %>% ggplot(data = twentyone,
+            mapping = aes(x = long, y = lat,
+                          group = group, fill = total))+ geom_polygon(color = "gray90", size = 0.1) 
 
 ```
 
