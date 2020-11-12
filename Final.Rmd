@@ -36,6 +36,8 @@ FiveYear <- FiveYear %>%
 
 ## Allan Juarez
 
+<font size="3"> 
+
 * Type, number, Iowa DOT District, County, route, location and estimated costs of projects planned between 2021 – 2025.  Where is the money going and how much?
 
 ```{r }
@@ -43,6 +45,8 @@ FiveYear <- FiveYear %>%
 ```
 
 ## John King
+
+<font size="3"> 
 
 * What work types are associated with interchanges?  Costs? What routes are interchanges being proposed on?
 
@@ -52,6 +56,8 @@ FiveYear <- FiveYear %>%
 
 ## Adam Brandt
 
+<font size="3"> 
+
 * Projects < $50 million, projects > $50 million & < $100 million, major projects > $100.  What is the most expensive project in each District?  The least expensive?
 
 ```{r }
@@ -59,6 +65,8 @@ FiveYear <- FiveYear %>%
 ```
 
 ## Colin Willenborg(Project Coordinator)
+
+<font size="3"> 
 
 * Project types and costs between Iowa DOT Districts and years.
 
@@ -86,7 +94,7 @@ FiveYear <- FiveYear %>%
 
 <font size="3"> 
 
-* How/do t work types relate to the federal work types:  construction, replacement, reconstruction, maintenance or preservation?  
+* How/do pavement work types relate to the federal work types:  construction, replacement, reconstruction, maintenance or preservation?  
 
 * How do funding levels in the 5 Year Program compare to those in the Asset Management Plan?
 
