@@ -1,5 +1,5 @@
 ---
-title: "Fianl_Project"
+title: "Final_Project"
 author: "Lisa McDaniel"
 date: "11/10/2020"
 output: html_document
@@ -34,20 +34,64 @@ FiveYear <- FiveYear %>%
 ```
 
 
-## Adam
+## Allan Juarez
+
+* Type, number, Iowa DOT District, County, route, location and estimated costs of projects planned between 2021 – 2025.  Where is the money going and how much?
+
 ```{r }
 
 ```
 
-## Allan
+## John King
 
-## John
+* What work types are associated with interchanges?  Costs? What routes are interchanges being proposed on?
 
-## Lisa
+```{r }
 
-## Colin
+```
+
+## Adam Brandt
+
+* Projects < $50 million, projects > $50 million & < $100 million, major projects > $100.  What is the most expensive project in each District?  The least expensive?
+
+```{r }
+
+```
+
+## Colin Willenborg(Project Coordinator)
+
+* Project types and costs between Iowa DOT Districts and years.
+
 ```{r}
 
 ```
 
+## Lisa McDaniel
 
+<font size="5"> Bridge Assets
+
+<font size="3"> 
+
+* How/do bridge/culvert work types relate to the federal work types:  construction, replacement, reconstruction, maintenance or preservation?  
+
+* How do funding levels in the 5 Year Program compare to those in the Asset Management Plan?
+
+* Compare the five year total of the 5 Year Program to the Asset Management Plan
+
+```{r }
+
+```
+
+<font size="5"> Pavement Assets
+
+<font size="3"> 
+
+* How/do t work types relate to the federal work types:  construction, replacement, reconstruction, maintenance or preservation?  
+
+* How do funding levels in the 5 Year Program compare to those in the Asset Management Plan?
+
+* Compare the five year total of the 5 Year Program to the Asset Management Plan
+
+```{r }
+
+```
