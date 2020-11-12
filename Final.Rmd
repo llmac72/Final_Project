@@ -58,6 +58,66 @@ twentyone <- inner_join(twentyone, us_counties, by = "subregion")
  twentyone %>% ggplot(data = twentyone,
             mapping = aes(x = long, y = lat,
                           group = group, fill = total))+ geom_polygon(color = "gray90", size = 0.1) 
+ 
+ twentytwo <- FiveYear %>% 
+  select(County,'Latitude\r\n(Decimal(', "Longitude\r\n(Decimal)","2022") %>%
+  rename(year ="2022")%>%
+  mutate(subregion = tolower(County)) %>% 
+  group_by(subregion) %>% 
+  summarize(total = sum(year,na.rm=TRUE))
+
+ 
+iowa <- c("iowa")
+us_counties <- us_counties %>% filter(region %in% iowa)
+twentytwo <- inner_join(twentytwo, us_counties, by = "subregion")
+ twentytwo %>% ggplot(data = twentytwo,
+            mapping = aes(x = long, y = lat,
+                          group = group, fill = total))+ geom_polygon(color = "gray90", size = 0.1)
+ 
+twentythree <- FiveYear %>% 
+  select(County,'Latitude\r\n(Decimal(', "Longitude\r\n(Decimal)","2023") %>%
+  rename(year ="2023")%>%
+  mutate(subregion = tolower(County)) %>% 
+  group_by(subregion) %>% 
+  summarize(total = sum(year,na.rm=TRUE))
+
+ 
+iowa <- c("iowa")
+us_counties <- us_counties %>% filter(region %in% iowa)
+twentythree <- inner_join(twentythree, us_counties, by = "subregion")
+ twentythree %>% ggplot(data = twentythree,
+            mapping = aes(x = long, y = lat,
+                          group = group, fill = total))+ geom_polygon(color = "gray90", size = 0.1) 
+ 
+twentyfour <- FiveYear %>% 
+  select(County,'Latitude\r\n(Decimal(', "Longitude\r\n(Decimal)","2024") %>%
+  rename(year ="2024")%>%
+  mutate(subregion = tolower(County)) %>% 
+  group_by(subregion) %>% 
+  summarize(total = sum(year,na.rm=TRUE))
+
+ 
+iowa <- c("iowa")
+us_counties <- us_counties %>% filter(region %in% iowa)
+twentyfour <- inner_join(twentyfour, us_counties, by = "subregion")
+ twentyfour %>% ggplot(data = twentyfour,
+            mapping = aes(x = long, y = lat,
+                          group = group, fill = total))+ geom_polygon(color = "gray90", size = 0.1)
+ 
+ twentyfive <- FiveYear %>% 
+  select(County,'Latitude\r\n(Decimal(', "Longitude\r\n(Decimal)","2025") %>%
+  rename(year ="2025")%>%
+  mutate(subregion = tolower(County)) %>% 
+  group_by(subregion) %>% 
+  summarize(total = sum(year,na.rm=TRUE))
+
+ 
+iowa <- c("iowa")
+us_counties <- us_counties %>% filter(region %in% iowa)
+twentyfive <- inner_join(twentyfive, us_counties, by = "subregion")
+ twentyfive %>% ggplot(data = twentyfive,
+            mapping = aes(x = long, y = lat,
+                          group = group, fill = total))+ geom_polygon(color = "gray90", size = 0.1)
 
 ```
 
