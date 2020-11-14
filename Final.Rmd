@@ -56,6 +56,83 @@ FiveYear <- FiveYear %>%
 * Type, number, route, and location by County and estimated costs of projects planned between 2021 – 2025.  Where is the money going and how much?
 
 ```{r }
+states <- map_data('state')
+us_counties <- map_data("county")
+
+twentyone <- FiveYear %>% 
+  select(County,'Latitude\r\n(Decimal(', "Longitude\r\n(Decimal)","2021") %>%
+  rename(year ="2021")%>%
+  mutate(subregion = tolower(County)) %>% 
+  group_by(subregion) %>% 
+  summarize(total = sum(year,na.rm=TRUE))
+
+ 
+iowa <- c("iowa")
+us_counties <- us_counties %>% filter(region %in% iowa)
+twentyone <- inner_join(twentyone, us_counties, by = "subregion")
+ twentyone %>% ggplot(data = twentyone,
+            mapping = aes(x = long, y = lat,
+                          group = group, fill = total))+ geom_polygon(color = "gray90", size = 0.1) 
+ 
+ twentytwo <- FiveYear %>% 
+  select(County,'Latitude\r\n(Decimal(', "Longitude\r\n(Decimal)","2022") %>%
+  rename(year ="2022")%>%
+  mutate(subregion = tolower(County)) %>% 
+  group_by(subregion) %>% 
+  summarize(total = sum(year,na.rm=TRUE))
+
+ 
+iowa <- c("iowa")
+us_counties <- us_counties %>% filter(region %in% iowa)
+twentytwo <- inner_join(twentytwo, us_counties, by = "subregion")
+ twentytwo %>% ggplot(data = twentytwo,
+            mapping = aes(x = long, y = lat,
+                          group = group, fill = total))+ geom_polygon(color = "gray90", size = 0.1)
+ 
+twentythree <- FiveYear %>% 
+  select(County,'Latitude\r\n(Decimal(', "Longitude\r\n(Decimal)","2023") %>%
+  rename(year ="2023")%>%
+  mutate(subregion = tolower(County)) %>% 
+  group_by(subregion) %>% 
+  summarize(total = sum(year,na.rm=TRUE))
+
+ 
+iowa <- c("iowa")
+us_counties <- us_counties %>% filter(region %in% iowa)
+twentythree <- inner_join(twentythree, us_counties, by = "subregion")
+ twentythree %>% ggplot(data = twentythree,
+            mapping = aes(x = long, y = lat,
+                          group = group, fill = total))+ geom_polygon(color = "gray90", size = 0.1) 
+ 
+twentyfour <- FiveYear %>% 
+  select(County,'Latitude\r\n(Decimal(', "Longitude\r\n(Decimal)","2024") %>%
+  rename(year ="2024")%>%
+  mutate(subregion = tolower(County)) %>% 
+  group_by(subregion) %>% 
+  summarize(total = sum(year,na.rm=TRUE))
+
+ 
+iowa <- c("iowa")
+us_counties <- us_counties %>% filter(region %in% iowa)
+twentyfour <- inner_join(twentyfour, us_counties, by = "subregion")
+ twentyfour %>% ggplot(data = twentyfour,
+            mapping = aes(x = long, y = lat,
+                          group = group, fill = total))+ geom_polygon(color = "gray90", size = 0.1)
+ 
+ twentyfive <- FiveYear %>% 
+  select(County,'Latitude\r\n(Decimal(', "Longitude\r\n(Decimal)","2025") %>%
+  rename(year ="2025")%>%
+  mutate(subregion = tolower(County)) %>% 
+  group_by(subregion) %>% 
+  summarize(total = sum(year,na.rm=TRUE))
+
+ 
+iowa <- c("iowa")
+us_counties <- us_counties %>% filter(region %in% iowa)
+twentyfive <- inner_join(twentyfive, us_counties, by = "subregion")
+ twentyfive %>% ggplot(data = twentyfive,
+            mapping = aes(x = long, y = lat,
+                          group = group, fill = total))+ geom_polygon(color = "gray90", size = 0.1)
 
 ```
 
@@ -86,6 +163,73 @@ FiveYear <- FiveYear %>%
 * Project types and costs between Iowa DOT Districts and years.
 
 ```{r}
+head(FiveYear)
+districts <- FiveYear %>% 
+  select(County, District) %>% 
+  mutate(subregion = tolower(County))
+
+county_map <- map_data("county")
+ia <- subset(county_map, region =="iowa")
+
+districts_2021 <- FiveYear %>% 
+  select(District, County,'Latitude\r\n(Decimal(', "Longitude\r\n(Decimal)","2021") %>%
+  rename(year ="2021")%>%
+  mutate(subregion = tolower(County)) %>% 
+  group_by(District) %>% 
+  summarize(total = sum(year,na.rm=TRUE))
+
+ia <- inner_join(ia, districts, by="subregion")
+
+districts_2021 <- inner_join(districts_2021, ia, by = "District")
+
+districts_2021 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1)
+
+districts_2022 <- FiveYear %>% 
+  select(District, County,'Latitude\r\n(Decimal(', "Longitude\r\n(Decimal)","2022") %>%
+  rename(year ="2022")%>%
+  mutate(subregion = tolower(County)) %>% 
+  group_by(District) %>% 
+  summarize(total = sum(year,na.rm=TRUE))
+
+districts_2022 <- inner_join(districts_2022, ia, by = "District")
+
+districts_2022 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1)
+
+# 2023
+districts_2023 <- FiveYear %>% 
+  select(District, County,'Latitude\r\n(Decimal(', "Longitude\r\n(Decimal)","2023") %>%
+  rename(year ="2023")%>%
+  mutate(subregion = tolower(County)) %>% 
+  group_by(District) %>% 
+  summarize(total = sum(year,na.rm=TRUE))
+
+districts_2023 <- inner_join(districts_2023, ia, by = "District")
+
+districts_2023 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1)
+
+# 2024
+districts_2024 <- FiveYear %>% 
+  select(District, County,'Latitude\r\n(Decimal(', "Longitude\r\n(Decimal)","2024") %>%
+  rename(year ="2024")%>%
+  mutate(subregion = tolower(County)) %>% 
+  group_by(District) %>% 
+  summarize(total = sum(year,na.rm=TRUE))
+
+districts_2024 <- inner_join(districts_2024, ia, by = "District")
+
+districts_2024 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1)
+
+# 2025
+districts_2025 <- FiveYear %>% 
+  select(District, County,'Latitude\r\n(Decimal(', "Longitude\r\n(Decimal)","2025") %>%
+  rename(year ="2025")%>%
+  mutate(subregion = tolower(County)) %>% 
+  group_by(District) %>% 
+  summarize(total = sum(year,na.rm=TRUE))
+
+districts_2025 <- inner_join(districts_2025, ia, by = "District")
+
+districts_2025 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1)
 
 ```
 
