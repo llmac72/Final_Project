@@ -1,0 +1,77 @@
+---
+title: "DataWork"
+author: "John King"
+date: "11/14/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Setup
+
+```{r, warning=FALSE, message=FALSE}
+library(readxl)
+library(tidyverse)
+library(maps)
+
+yearplan <- read_excel('./2021_2025_5YrProg_Highway_Program.xlsx')
+
+
+cleanplan <- yearplan %>%
+  fill(Location, .direction = "down") %>% 
+  rename(District = `Iowa DOT District`, Route = `Project Route`, 
+         Work = `Type of Work`) %>%
+  group_by(County, District, Route, Location) %>%
+  fill(Miles, .direction = "down") %>%
+  mutate(District = as.numeric(District)) %>%
+  select(State, County, District, Route, Location, 
+         Miles, Work, `2021`, `2022`, `2023`, `2024`, `2025`)
+cleanplan['totalProjection'] <- rowSums(cleanplan[, c("2021", "2022", "2023", "2024",
+                                                      "2025")], na.rm = TRUE)
+countyLines <- map_data("county")
+```
+
+## Work Types Associated With Interchanges
+
+```{r, warning=FALSE, message=FALSE}
+
+  
+interchange <- cleanplan %>% filter(grepl('INTERCHANGE', Location))
+
+interchange 
+
+interchange %>% group_by(Work) %>% summarise(sum = n()) %>% 
+  ggplot(aes(x=Work, weight=sum)) + geom_bar() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+interchange %>% group_by(Location) %>% summarise(WorkSum = n()) %>% 
+  filter(WorkSum != 1)
+
+interchange %>% group_by(Location) %>% summarise(WorkSum = n()) %>% 
+  filter(WorkSum != 1) %>% 
+  ggplot(aes(x=Location, weight = WorkSum)) + geom_bar() + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1)) + 
+  scale_x_discrete(label=abbreviate)
+```
+
+Bridge Deck Overlays seem to be the most common type of work on the interchanges. It seems that a great number of planned projects are related to maintenance or additions for the sake of drivers (traffic signs, traffic signals, lighting).
+
+## Counties With Proposed Interchanges
+
+
+
+## Cost of Interchanges
+
+```{r, warning=FALSE, message=FALSE}
+
+interchange <- cleanplan %>% filter(grepl('INTERCHANGE', Location))
+
+interchange %>% ggplot(aes(y = totalProjection, x= Location)) + geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1))
+```
+
+## Routes with proposed Interchanges
+
+
