@@ -151,10 +151,24 @@ twentyfive <- inner_join(twentyfive, us_counties, by = "subregion")
 <font size="3"> 
 
 * Projects < $50 million, projects > $50 million & < $100 million, major projects > $100.  What is the most expensive project in each District?  The least expensive?
-
 ```{r }
-
+projects <- FiveYear %>% 
+  select(District, County, Route, 'Latitude\r\n(Decimal(', "Longitude\r\n(Decimal)", "2021", "2022", "2023", "2024", "2025") %>%
+  mutate(subregion = tolower(County)) %>% 
+  group_by(County, District, Route, Location) %>% 
+  summarise(cost = sum(`2021`, `2022`, `2023`, `2024`, `2025`,  na.rm=TRUE))
+max_projects <- projects %>% arrange(-cost)
+head(max_projects)
+min_projects <- projects %>% arrange(cost)
+head(min_projects)
+max_by_district <- projects %>% group_by(District) %>% slice(which.max(cost))
+head(max_by_district)
+min_by_district <-projects %>% group_by(District) %>% slice(which.min(cost))
+head(min_by_district)
+range <- split(projects, cut(projects$cost, c(0, 50000, 100000, 1000000)))
+head(range)
 ```
+There are 629 projects that are less than $50 million, 6 projects that are between $50 and $100 million, and 4 projects that are more than $100 million. The costs are the total cost of the project over the five years. The cost column is in thousands of dollars. The most expensive project is the I-29/80/480 INTERSTATES IN COUNCIL BLUFFS (CBIS) at $319,603,000 and the least expensive project is 	1.8 MI W OF DES MOINES RIVER TO W OF SNEDDEN DR at $2000.
 
 ## Colin Willenborg(Project Coordinator)
 
