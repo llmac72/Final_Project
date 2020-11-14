@@ -9,7 +9,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Lisa McDaniel" />
+<meta name="author" content="Adam Brandt, Allan Juarez, John King, Lisa McDaniel, Colin Willenborg (Project Coordinator)" />
 
 <meta name="date" content="2020-11-10" />
 
@@ -364,66 +364,33 @@ summary {
 
 
 <h1 class="title toc-ignore">Final_Project</h1>
-<h4 class="author">Lisa McDaniel</h4>
+<h4 class="author">Adam Brandt, Allan Juarez, John King, Lisa McDaniel, Colin Willenborg (Project Coordinator)</h4>
 <h4 class="date">11/10/2020</h4>
 
 </div>
 
 
+<p><font size="5"> <strong>Introduction</strong><br />
+<font size="3"></p>
+<p>The 5 Year program is prepared by the Iowa Department of Transportation (Iowa DOT) and identifies transportation projects planned for construction on a annual basis for a period of five years, in this case 2021-2025. The program includes projects for aviation, transit, railroad, safety, trails and highway. Project location, county, work type, route, length and annual construction costs are included in the program for each project listed. The document is updated annually by removing completed projects, introducing new projects, revising project schedules and costs and rescheduling projects as needed. It is approved by the Iowa DOT commission and provides transparency to the public by being available on the Iowa DOT’s website.</p>
+<p>Information in the 5 Year Program assists the Iowa DOT, local public agencies and the federal government in developing a budget, identify needs, project status, documentation requirements and staffing resources. The document also makes it easier for organizations to compare estimated project costs with actual project costs and track project costs/status over the years, across the state/county and by project. There is a lot of information in the 5 Year Program, so we focused our analysis on the highway program, which begins on page 50.</p>
+<p><font size="5"><strong>Dataset Overview</strong> <font size="3"></p>
+<p>The 5 Year Program can be found on the Iowa DOT’s website at:</p>
+<div align="center">
+<a href="https://iowadot.gov/program_management/FINAL_2021-2025_5YrProg.pdf" class="uri">https://iowadot.gov/program_management/FINAL_2021-2025_5YrProg.pdf</a>
+</div>
+<p><br></p>
+<p>The 5 Year Program was originally created as a pdf and exported to an excel spreadsheet. The conversion was a bit messy so quality assurance (QA) was done to ensure that project costs were correct and in the correct year. Several columns were added to the dataset including Iowa DOT District, county latitude and longitude and projects rescheduled in case the Highway Trust Funds becomes insolvent. We also <em>filled down</em> the project location and miles for each work type and renamed several columns. As each of us explored the data, we continued to make various changes/revisions specific to our individual analysis.</p>
 <pre class="r"><code>library(readxl)
 library(tidyverse)
 library(dplyr)
 
 FiveYear &lt;- read_excel(&#39;./2021_2025_5YrProg_Highway_Program.xlsx&#39;)
 
-str(FiveYear) </code></pre>
-<pre><code>## tibble [971 x 20] (S3: tbl_df/tbl/data.frame)
-##  $ State                                  : chr [1:971] &quot;Iowa&quot; &quot;Iowa&quot; &quot;Iowa&quot; &quot;Iowa&quot; ...
-##  $ County                                 : chr [1:971] &quot;Adair&quot; &quot;Adair&quot; &quot;Adair&quot; &quot;Adair&quot; ...
-##  $ Latitude
-## (Text)                     : num [1:971] 412043 NA NA NA NA ...
-##  $ Latitude
-## (Decimal(                  : num [1:971] 41.3 NA NA NA NA ...
-##  $ Latitude                               : chr [1:971] &quot;41° 20&#39; 43&#39;&#39;&quot; NA NA NA ...
-##  $ Longitude
-## (Text)                    : num [1:971] -942818 NA NA NA NA ...
-##  $ Longitude
-## (Decimal)                 : num [1:971] -94.5 NA NA NA NA ...
-##  $ Longitude                              : chr [1:971] &quot;-94° 28&#39; 18&#39;&#39;&quot; NA NA NA ...
-##  $ Iowa DOT District                      : num [1:971] 4 4 4 4 4 4 4 2 2 2 ...
-##  $ Project Route                          : num [1:971] 25 25 80 80 92 92 148 9 9 9 ...
-##  $ Location                               : chr [1:971] &quot;GREENFIELD TO I-80&quot; &quot;I-80 INTERCHANGE&quot; &quot;CASS CO TO IA 25 (WB)&quot; &quot;IA 25 TO MADISON CO (EB)&quot; ...
-##  $ State Share                            : chr [1:971] NA NA NA NA ...
-##  $ Reschedule if the HTF Becomes Insolvent: chr [1:971] NA NA NA NA ...
-##  $ Miles                                  : num [1:971] 12.3 NA 13 11.5 NA NA NA NA NA NA ...
-##  $ Type of Work                           : chr [1:971] &quot;PAVEMENT REHAB&quot; &quot;BRIDGE DECK OVERLAY&quot; &quot;PAVEMENT REHAB&quot; &quot;PAVEMENT REHAB&quot; ...
-##  $ 2021                                   : num [1:971] 1350 NA NA NA NA NA 712 NA NA NA ...
-##  $ 2022                                   : num [1:971] NA 333 NA 2866 NA ...
-##  $ 2023                                   : num [1:971] NA NA NA NA NA NA NA NA NA NA ...
-##  $ 2024                                   : num [1:971] NA NA NA NA NA ...
-##  $ 2025                                   : num [1:971] NA NA 8977 NA 490 ...</code></pre>
-<pre class="r"><code>names(FiveYear)</code></pre>
-<pre><code>##  [1] &quot;State&quot;                                  
-##  [2] &quot;County&quot;                                 
-##  [3] &quot;Latitude\r\n(Text)&quot;                     
-##  [4] &quot;Latitude\r\n(Decimal(&quot;                  
-##  [5] &quot;Latitude&quot;                               
-##  [6] &quot;Longitude\r\n(Text)&quot;                    
-##  [7] &quot;Longitude\r\n(Decimal)&quot;                 
-##  [8] &quot;Longitude&quot;                              
-##  [9] &quot;Iowa DOT District&quot;                      
-## [10] &quot;Project Route&quot;                          
-## [11] &quot;Location&quot;                               
-## [12] &quot;State Share&quot;                            
-## [13] &quot;Reschedule if the HTF Becomes Insolvent&quot;
-## [14] &quot;Miles&quot;                                  
-## [15] &quot;Type of Work&quot;                           
-## [16] &quot;2021&quot;                                   
-## [17] &quot;2022&quot;                                   
-## [18] &quot;2023&quot;                                   
-## [19] &quot;2024&quot;                                   
-## [20] &quot;2025&quot;</code></pre>
-<pre class="r"><code>FiveYear &lt;- FiveYear %&gt;% 
+str(FiveYear) 
+names(FiveYear)
+
+FiveYear &lt;- FiveYear %&gt;% 
   fill(Location, .direction = &quot;down&quot;) %&gt;% 
   rename(District = `Iowa DOT District`, Route = `Project Route`, 
          Work = `Type of Work`) %&gt;%
@@ -434,7 +401,7 @@ str(FiveYear) </code></pre>
 <h2>Allan Juarez</h2>
 <p><font size="3"></p>
 <ul>
-<li>Type, number, Iowa DOT District, County, route, location and estimated costs of projects planned between 2021 – 2025. Where is the money going and how much?</li>
+<li>Type, number, route, and location by County and estimated costs of projects planned between 2021 – 2025. Where is the money going and how much?</li>
 </ul>
 </div>
 <div id="john-king" class="section level2">
@@ -460,13 +427,21 @@ str(FiveYear) </code></pre>
 </div>
 <div id="lisa-mcdaniel" class="section level2">
 <h2>Lisa McDaniel</h2>
-<p><font size="5"> Bridge Assets</p>
 <p><font size="3"></p>
+<p>So we’ve seen the impacts of the 5 Year Program at a state level but how can the program be used at a national level?</p>
+<p>The code of federal regulation, 23 CFR 515, requires states to develop an asset management plan that describes how they will manage the national highway system in a financially responsible manner. There are a lot of requirements in developing the asset management plan, including how other planning documents, such as the 5 Year Program, contribute to managing their assets. By law, the Iowa DOT only has to include bridge/culvert and pavement assets. Implementation of the asset management plan is reviewed on an annual basis. There are penalties if states don’t develop and implement an asset management plan according to federal law.</p>
+<p>The analysis I performed focuses on how the Iowa DOT’s 5 Year program contributes to managing their bridge and pavement assets and compares funding levels in the 5 Year Program to those in the asset management plan.</p>
+<p>The Iowa DOT’s asset management plan was approved last in 2019 and can be found on their website at:</p>
+<div align="center">
+<a href="https://iowadot.gov/systems_planning/fpmam/IowaDOT-TAMP-2019.pdf" class="uri">https://iowadot.gov/systems_planning/fpmam/IowaDOT-TAMP-2019.pdf</a>
+</div>
+<p><br></p>
 <ul>
 <li><p>How/do bridge/culvert work types relate to the federal work types: construction, replacement, reconstruction, maintenance or preservation?</p></li>
 <li><p>How do funding levels in the 5 Year Program compare to those in the Asset Management Plan?</p></li>
 <li><p>Compare the five year total of the 5 Year Program to the Asset Management Plan</p></li>
 </ul>
+<p><font size="5"> Bridge Assets</p>
 <p><font size="5"> Pavement Assets</p>
 <p><font size="3"></p>
 <ul>

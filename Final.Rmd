@@ -1,6 +1,6 @@
 ---
 title: "Final_Project"
-author: "Lisa McDaniel"
+author: "Adam Brandt, Allan Juarez, John King, Lisa McDaniel, Colin Willenborg (Project Coordinator)"
 date: "11/10/2020"
 output: html_document
 ---
@@ -9,9 +9,24 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+<font size="5"> **Introduction**  
+<font size="3">  
+
+The 5 Year program is prepared by the Iowa Department of Transportation (Iowa DOT) and identifies transportation projects planned for construction on a annual basis for a period of five years, in this case 2021-2025.  The program includes projects for aviation, transit, railroad, safety, trails and highway.  Project location, county, work type, route, length and annual construction costs are included in the program for each project listed.  The document is updated annually by removing completed projects, introducing new projects, revising project schedules and costs and rescheduling projects as needed.  It is approved by the Iowa DOT commission and provides transparency to the public by being available on the Iowa DOT's website. 
+
+Information in the 5 Year Program assists the Iowa DOT, local public agencies and the federal government in developing a budget, identify needs, project status, documentation requirements and staffing resources.  The document also makes it easier for organizations to compare estimated project costs with actual project costs and track project costs/status over the years, across the state/county and by project.  There is a lot of information in the 5 Year Program, so we focused our analysis on the highway program, which begins on page 50.
+
+<font size="5">**Dataset Overview**
+<font size="3">
+
+The 5 Year Program can be found on the Iowa DOT's website at:
 
 
-```{r message=FALSE}
+<div align="center">https://iowadot.gov/program_management/FINAL_2021-2025_5YrProg.pdf</div><br>
+
+The 5 Year Program was originally created as a pdf and exported to an excel spreadsheet.  The conversion was a bit messy so quality assurance (QA) was done to ensure that project costs were correct and in the correct year.  Several columns were added to the dataset including Iowa DOT District, county latitude and longitude and projects rescheduled in case the Highway Trust Funds becomes insolvent. We also *filled down* the project location and miles for each work type and renamed several columns.  As each of us explored the data, we continued to make various changes/revisions specific to our individual analysis.
+
+```{r message=FALSE, echo = TRUE, results = "hide"}
 
 library(readxl)
 library(tidyverse)
@@ -38,7 +53,7 @@ FiveYear <- FiveYear %>%
 
 <font size="3"> 
 
-* Type, number, Iowa DOT District, County, route, location and estimated costs of projects planned between 2021 – 2025.  Where is the money going and how much?
+* Type, number, route, and location by County and estimated costs of projects planned between 2021 – 2025.  Where is the money going and how much?
 
 ```{r }
 
@@ -76,15 +91,25 @@ FiveYear <- FiveYear %>%
 
 ## Lisa McDaniel
 
-<font size="5"> Bridge Assets
-
 <font size="3"> 
+
+So we've seen the impacts of the 5 Year Program at a state level but how can the program be used at a national level?
+
+The code of federal regulation, 23 CFR 515,  requires states to develop an asset management plan that describes how they will manage the national highway system in a financially responsible manner.  There are a lot of requirements in developing the asset management plan, including how other planning documents, such as the 5 Year Program, contribute to managing their assets.  By law, the Iowa DOT only has to include bridge/culvert and pavement assets.  Implementation of the asset management plan is reviewed on an annual basis.  There are penalties if states don't develop and implement an asset management plan according to federal law.
+
+The analysis I performed focuses on how the Iowa DOT's 5 Year program contributes to managing their bridge and pavement assets and compares funding levels in the 5 Year Program to those in the asset management plan.
+
+The Iowa DOT's asset management plan was approved last in 2019 and can be found on their website at:
+
+<div align="center">https://iowadot.gov/systems_planning/fpmam/IowaDOT-TAMP-2019.pdf</div><br>
 
 * How/do bridge/culvert work types relate to the federal work types:  construction, replacement, reconstruction, maintenance or preservation?  
 
 * How do funding levels in the 5 Year Program compare to those in the Asset Management Plan?
 
 * Compare the five year total of the 5 Year Program to the Asset Management Plan
+
+<font size="5"> Bridge Assets
 
 ```{r }
 
