@@ -15,6 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(readxl)
 library(tidyverse)
 library(maps)
+library(mapproj)
 
 yearplan <- read_excel('./2021_2025_5YrProg_Highway_Program.xlsx')
 
@@ -31,6 +32,14 @@ cleanplan <- yearplan %>%
 cleanplan['totalProjection'] <- rowSums(cleanplan[, c("2021", "2022", "2023", "2024",
                                                       "2025")], na.rm = TRUE)
 countyLines <- map_data("county")
+
+
+#Cleaning City Population data
+cities <- read_excel("./SUB-IP-EST2019-ANNRES-19.xlsx")
+cities <- cities %>% select(`table with row headers in column A and column headers in rows 3 through 4 (leading dots indicate sub-parts)`, `...13`) %>% 
+  rename(Population = "...13", Area = "table with row headers in column A and column headers in rows 3 through 4 (leading dots indicate sub-parts)")
+cities <- cities[-c(1,2,3),]
+cities <- cities %>% separate(Area, into = c("City", "State"), sep = ", ") %>% select(-State)
 ```
 
 ## Work Types Associated With Interchanges
@@ -40,7 +49,8 @@ countyLines <- map_data("county")
   
 interchange <- cleanplan %>% filter(grepl('INTERCHANGE', Location))
 
-interchange 
+interchange["County"] <- tolower(interchange$County)
+interchange
 
 interchange %>% group_by(Work) %>% summarise(sum = n()) %>% 
   ggplot(aes(x=Work, weight=sum)) + geom_bar() + 
@@ -49,6 +59,8 @@ interchange %>% group_by(Work) %>% summarise(sum = n()) %>%
 interchange %>% group_by(Location) %>% summarise(WorkSum = n()) %>% 
   filter(WorkSum != 1)
 
+
+# Is this useful? Maybe for report...
 interchange %>% group_by(Location) %>% summarise(WorkSum = n()) %>% 
   filter(WorkSum != 1) %>% 
   ggplot(aes(x=Location, weight = WorkSum)) + geom_bar() + 
@@ -60,13 +72,24 @@ Bridge Deck Overlays seem to be the most common type of work on the interchanges
 
 ## Counties With Proposed Interchanges
 
+```{r, warning=FALSE, message=FALSE}
 
+iowaLines <- countyLines %>% filter(region == "iowa")
+iowaLines <- iowaLines %>% select(long, lat, group, order, subregion)
+joinedInter <- iowaLines %>% left_join(interchange, by = c(subregion = "County"))
+
+joinedInter["present"] <- ifelse(is.na(joinedInter$District), "no", "yes")
+
+cityData <- map_data("us.cities")
+
+joinedInter %>% ggplot(aes(x = long, y = lat, fill = present)) + 
+  geom_polygon(aes(group = group)) + coord_map()
+
+```
 
 ## Cost of Interchanges
 
 ```{r, warning=FALSE, message=FALSE}
-
-interchange <- cleanplan %>% filter(grepl('INTERCHANGE', Location))
 
 interchange %>% ggplot(aes(y = totalProjection, x= Location)) + geom_boxplot() +
   theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1))
