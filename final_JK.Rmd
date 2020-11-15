@@ -14,8 +14,12 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r, warning=FALSE, message=FALSE}
 library(readxl)
 library(tidyverse)
+library(osmdata)
+library(sf)
 library(maps)
 library(mapproj)
+#library(ggmap)
+#library(ggthemes)
 
 yearplan <- read_excel('./2021_2025_5YrProg_Highway_Program.xlsx')
 
@@ -50,11 +54,13 @@ cities <- cities %>% separate(Area, into = c("City", "State"), sep = ", ") %>% s
 interchange <- cleanplan %>% filter(grepl('INTERCHANGE', Location))
 
 interchange["County"] <- tolower(interchange$County)
+interchange["Route"] <- as.character(interchange$Route)
 interchange
 
 interchange %>% group_by(Work) %>% summarise(sum = n()) %>% 
   ggplot(aes(x=Work, weight=sum)) + geom_bar() + 
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  labs(title = "Count of Interchange Work Plans per Work Type", x = "Type of Work")
 
 interchange %>% group_by(Location) %>% summarise(WorkSum = n()) %>% 
   filter(WorkSum != 1)
@@ -78,12 +84,11 @@ iowaLines <- countyLines %>% filter(region == "iowa")
 iowaLines <- iowaLines %>% select(long, lat, group, order, subregion)
 joinedInter <- iowaLines %>% left_join(interchange, by = c(subregion = "County"))
 
-joinedInter["present"] <- ifelse(is.na(joinedInter$District), "no", "yes")
+joinedInter["presentInIntersectionData"] <- ifelse(is.na(joinedInter$District), "no", "yes")
 
-cityData <- map_data("us.cities")
 
-joinedInter %>% ggplot(aes(x = long, y = lat, fill = present)) + 
-  geom_polygon(aes(group = group)) + coord_map()
+joinedInter %>% ggplot(aes(x = long, y = lat, fill = presentInIntersectionData)) + 
+  geom_polygon(aes(group = group)) + coord_map() #+ theme_map()
 
 ```
 
@@ -91,10 +96,47 @@ joinedInter %>% ggplot(aes(x = long, y = lat, fill = present)) +
 
 ```{r, warning=FALSE, message=FALSE}
 
-interchange %>% ggplot(aes(y = totalProjection, x= Location)) + geom_boxplot() +
-  theme(axis.text.x = element_text(angle = 90, vjust = .5, hjust = 1))
+plot1 <- interchange %>% ggplot(aes(y = totalProjection, x= Work)) + geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
+  labs(x = "Type of Work", y = "Cost in Thousands of Dollars", title = "Cost of Projects by Type of Work")
+  
+plot1
+
+plot1 + coord_cartesian(ylim = c(20, 16000))
 ```
+First chart shows that the grade and pave and new bridge projects are the most expensive. Now we zoom in the plot ignoring the outliers to better see the other categories. From this chart we can see that most of the projects are relatively cheap in comparison, with only bridge replacement, grading, and paving projects frequently approaching the cost.
+
+
+## Counties With Proposed Interchanges
+
+```{r, warning=FALSE, message=FALSE}
+
+iowaLines <- countyLines %>% filter(region == "iowa")
+iowaLines <- iowaLines %>% select(long, lat, group, order, subregion)
+joinedInter <- iowaLines %>% left_join(interchange, by = c(subregion = "County"))
+
+joinedInter["presentInIntersectionData"] <- ifelse(is.na(joinedInter$District), "no", "yes")
+
+
+joinedInter %>% ggplot(aes(x = long, y = lat, fill = presentInIntersectionData)) + 
+  geom_polygon(aes(group = group)) + coord_map()
+
+```
+
 
 ## Routes with proposed Interchanges
 
+```{r, warning=FALSE, message=FALSE}
 
+routeData <- interchange %>% group_by(Route) %>% summarise(sum = n())
+routeData
+routeData["Route"] <- factor(routeData$Route, levels = c("6", "9", "20", "25", "29", "30", "35", "59", 
+                                                         "74", "80", "141", "235", "280", "380"))
+routeData %>% ggplot(aes(x= Route, weight = sum)) + geom_bar() + 
+  labs(title = "Count of Interchange Plans by Route")
+```
+
+
+
+
+We can see that the vast majority of interchange projects are being proposed on the major routes (80, 35, 380, and 29)
