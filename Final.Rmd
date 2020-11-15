@@ -192,6 +192,9 @@ districts_2021 <- FiveYear %>%
   group_by(District) %>% 
   summarize(total = sum(year,na.rm=TRUE))
 
+districts_2021
+districts_2021_totals <- districts_2021
+
 ia <- inner_join(ia, districts, by="subregion")
 
 districts_2021 <- inner_join(districts_2021, ia, by = "District")
@@ -205,6 +208,9 @@ districts_2022 <- FiveYear %>%
   group_by(District) %>% 
   summarize(total = sum(year,na.rm=TRUE))
 
+districts_2022
+districts_2022_totals <- districts_2022
+
 districts_2022 <- inner_join(districts_2022, ia, by = "District")
 
 districts_2022 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1)
@@ -216,6 +222,9 @@ districts_2023 <- FiveYear %>%
   mutate(subregion = tolower(County)) %>% 
   group_by(District) %>% 
   summarize(total = sum(year,na.rm=TRUE))
+
+districts_2023
+districts_2023_totals <- districts_2023
 
 districts_2023 <- inner_join(districts_2023, ia, by = "District")
 
@@ -229,6 +238,9 @@ districts_2024 <- FiveYear %>%
   group_by(District) %>% 
   summarize(total = sum(year,na.rm=TRUE))
 
+districts_2024
+districts_2024_totals <- districts_2024
+
 districts_2024 <- inner_join(districts_2024, ia, by = "District")
 
 districts_2024 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1)
@@ -241,10 +253,41 @@ districts_2025 <- FiveYear %>%
   group_by(District) %>% 
   summarize(total = sum(year,na.rm=TRUE))
 
+districts_2025
+districts_2025_totals <- districts_2025
+
 districts_2025 <- inner_join(districts_2025, ia, by = "District")
 
 districts_2025 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1)
 
+```
+
+```{r}
+FiveYear_Pop <- left_join(FiveYear, IowaPop, by=c("County"="subregion")) %>% 
+  rename(population = "2019") %>% 
+  group_by(District) %>% 
+  distinct(County, population) %>% 
+  summarize(total_pop = sum(population, na.rm=TRUE))
+
+districts_2021_totals <- left_join(districts_2021_totals, FiveYear_Pop)
+districts_2021_totals %>% 
+  mutate(spent_per_pop = (total* 1000) / total_pop)
+
+districts_2022_totals <- left_join(districts_2022_totals, FiveYear_Pop)
+districts_2022_totals %>% 
+  mutate(spent_per_pop = (total* 1000) / total_pop)
+
+districts_2023_totals <- left_join(districts_2023_totals, FiveYear_Pop)
+districts_2023_totals %>% 
+  mutate(spent_per_pop = (total* 1000) / total_pop)
+
+districts_2024_totals <- left_join(districts_2024_totals, FiveYear_Pop)
+districts_2024_totals %>% 
+  mutate(spent_per_pop = (total* 1000) / total_pop)
+
+districts_2025_totals <- left_join(districts_2025_totals, FiveYear_Pop)
+districts_2025_totals %>% 
+  mutate(spent_per_pop = (total* 1000) / total_pop)
 ```
 
 ## Lisa McDaniel
