@@ -157,16 +157,26 @@ projects <- FiveYear %>%
   mutate(subregion = tolower(County)) %>% 
   group_by(County, District, Route, Location) %>% 
   summarise(cost = sum(`2021`, `2022`, `2023`, `2024`, `2025`,  na.rm=TRUE))
+
 max_projects <- projects %>% arrange(-cost)
 head(max_projects)
+
 min_projects <- projects %>% arrange(cost)
 head(min_projects)
-max_by_district <- projects %>% group_by(District) %>% slice(which.max(cost))
+
+max_by_district <- projects %>% group_by(District) %>% slice(which.max(cost)) 
+ggplot(data = max_by_district) + geom_bar(aes(x = District, y = cost), stat = 'identity') +
+  labs(x = "Cost by District", y = "Cost in Thousands of Dollars", title = "Cost of Projects by District")
 head(max_by_district)
+
 min_by_district <-projects %>% group_by(District) %>% slice(which.min(cost))
+ggplot(data = min_by_district) + geom_bar(aes(x = District, y = cost), stat = 'identity') +
+  labs(x = "Cost by District", y = "Cost in Thousands of Dollars", title = "Cost of Projects by District")
 head(min_by_district)
+
 range <- split(projects, cut(projects$cost, c(0, 50000, 100000, 1000000)))
 head(range)
+hist(projects$cost, main = "Distribution of Project Costs", xlab = "Cost of Projects in Thousands of Dollars", ylab = "Number of Projects")
 ```
 There are 629 projects that are less than $50 million, 6 projects that are between $50 and $100 million, and 4 projects that are more than $100 million. The costs are the total cost of the project over the five years. The cost column is in thousands of dollars. The most expensive project is the I-29/80/480 INTERSTATES IN COUNCIL BLUFFS (CBIS) at $319,603,000 and the least expensive project is 	1.8 MI W OF DES MOINES RIVER TO W OF SNEDDEN DR at $2000.
 
