@@ -151,10 +151,34 @@ twentyfive <- inner_join(twentyfive, us_counties, by = "subregion")
 <font size="3"> 
 
 * Projects < $50 million, projects > $50 million & < $100 million, major projects > $100.  What is the most expensive project in each District?  The least expensive?
-
 ```{r }
+projects <- FiveYear %>% 
+  select(District, County, Route, 'Latitude\r\n(Decimal(', "Longitude\r\n(Decimal)", "2021", "2022", "2023", "2024", "2025") %>%
+  mutate(subregion = tolower(County)) %>% 
+  group_by(County, District, Route, Location) %>% 
+  summarise(cost = sum(`2021`, `2022`, `2023`, `2024`, `2025`,  na.rm=TRUE))
 
+max_projects <- projects %>% arrange(-cost)
+head(max_projects)
+
+min_projects <- projects %>% arrange(cost)
+head(min_projects)
+
+max_by_district <- projects %>% group_by(District) %>% slice(which.max(cost)) 
+ggplot(data = max_by_district) + geom_bar(aes(x = District, y = cost), stat = 'identity') +
+  labs(x = "Cost by District", y = "Cost in Thousands of Dollars", title = "Cost of Projects by District")
+head(max_by_district)
+
+min_by_district <-projects %>% group_by(District) %>% slice(which.min(cost))
+ggplot(data = min_by_district) + geom_bar(aes(x = District, y = cost), stat = 'identity') +
+  labs(x = "Cost by District", y = "Cost in Thousands of Dollars", title = "Cost of Projects by District")
+head(min_by_district)
+
+range <- split(projects, cut(projects$cost, c(0, 50000, 100000, 1000000)))
+head(range)
+hist(projects$cost, main = "Distribution of Project Costs", xlab = "Cost of Projects in Thousands of Dollars", ylab = "Number of Projects")
 ```
+There are 629 projects that are less than $50 million, 6 projects that are between $50 and $100 million, and 4 projects that are more than $100 million. The costs are the total cost of the project over the five years. The cost column is in thousands of dollars. The most expensive project is the I-29/80/480 INTERSTATES IN COUNCIL BLUFFS (CBIS) at $319,603,000 and the least expensive project is 	1.8 MI W OF DES MOINES RIVER TO W OF SNEDDEN DR at $2000.
 
 ## Colin Willenborg(Project Coordinator)
 
@@ -178,6 +202,9 @@ districts_2021 <- FiveYear %>%
   group_by(District) %>% 
   summarize(total = sum(year,na.rm=TRUE))
 
+districts_2021
+districts_2021_totals <- districts_2021
+
 ia <- inner_join(ia, districts, by="subregion")
 
 districts_2021 <- inner_join(districts_2021, ia, by = "District")
@@ -191,6 +218,9 @@ districts_2022 <- FiveYear %>%
   group_by(District) %>% 
   summarize(total = sum(year,na.rm=TRUE))
 
+districts_2022
+districts_2022_totals <- districts_2022
+
 districts_2022 <- inner_join(districts_2022, ia, by = "District")
 
 districts_2022 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1)
@@ -202,6 +232,9 @@ districts_2023 <- FiveYear %>%
   mutate(subregion = tolower(County)) %>% 
   group_by(District) %>% 
   summarize(total = sum(year,na.rm=TRUE))
+
+districts_2023
+districts_2023_totals <- districts_2023
 
 districts_2023 <- inner_join(districts_2023, ia, by = "District")
 
@@ -215,6 +248,9 @@ districts_2024 <- FiveYear %>%
   group_by(District) %>% 
   summarize(total = sum(year,na.rm=TRUE))
 
+districts_2024
+districts_2024_totals <- districts_2024
+
 districts_2024 <- inner_join(districts_2024, ia, by = "District")
 
 districts_2024 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1)
@@ -227,10 +263,41 @@ districts_2025 <- FiveYear %>%
   group_by(District) %>% 
   summarize(total = sum(year,na.rm=TRUE))
 
+districts_2025
+districts_2025_totals <- districts_2025
+
 districts_2025 <- inner_join(districts_2025, ia, by = "District")
 
 districts_2025 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1)
 
+```
+
+```{r}
+FiveYear_Pop <- left_join(FiveYear, IowaPop, by=c("County"="subregion")) %>% 
+  rename(population = "2019") %>% 
+  group_by(District) %>% 
+  distinct(County, population) %>% 
+  summarize(total_pop = sum(population, na.rm=TRUE))
+
+districts_2021_totals <- left_join(districts_2021_totals, FiveYear_Pop)
+districts_2021_totals %>% 
+  mutate(spent_per_pop = (total* 1000) / total_pop)
+
+districts_2022_totals <- left_join(districts_2022_totals, FiveYear_Pop)
+districts_2022_totals %>% 
+  mutate(spent_per_pop = (total* 1000) / total_pop)
+
+districts_2023_totals <- left_join(districts_2023_totals, FiveYear_Pop)
+districts_2023_totals %>% 
+  mutate(spent_per_pop = (total* 1000) / total_pop)
+
+districts_2024_totals <- left_join(districts_2024_totals, FiveYear_Pop)
+districts_2024_totals %>% 
+  mutate(spent_per_pop = (total* 1000) / total_pop)
+
+districts_2025_totals <- left_join(districts_2025_totals, FiveYear_Pop)
+districts_2025_totals %>% 
+  mutate(spent_per_pop = (total* 1000) / total_pop)
 ```
 
 ## Lisa McDaniel

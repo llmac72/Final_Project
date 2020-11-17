@@ -495,6 +495,102 @@ twentyfive &lt;- inner_join(twentyfive, us_counties, by = &quot;subregion&quot;)
 <ul>
 <li>Projects &lt; $50 million, projects &gt; $50 million &amp; &lt; $100 million, major projects &gt; $100. What is the most expensive project in each District? The least expensive?</li>
 </ul>
+<pre class="r"><code>projects &lt;- FiveYear %&gt;% 
+  select(District, County, Route, &#39;Latitude\r\n(Decimal(&#39;, &quot;Longitude\r\n(Decimal)&quot;, &quot;2021&quot;, &quot;2022&quot;, &quot;2023&quot;, &quot;2024&quot;, &quot;2025&quot;) %&gt;%
+  mutate(subregion = tolower(County)) %&gt;% 
+  group_by(County, District, Route, Location) %&gt;% 
+  summarise(cost = sum(`2021`, `2022`, `2023`, `2024`, `2025`,  na.rm=TRUE))</code></pre>
+<pre><code>## Adding missing grouping variables: `Location`</code></pre>
+<pre><code>## `summarise()` regrouping output by &#39;County&#39;, &#39;District&#39;, &#39;Route&#39; (override with `.groups` argument)</code></pre>
+<pre class="r"><code>max_projects &lt;- projects %&gt;% arrange(-cost)
+head(max_projects)</code></pre>
+<pre><code>## # A tibble: 6 x 5
+## # Groups:   County, District, Route [5]
+##   County        District Route Location                                     cost
+##   &lt;chr&gt;            &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;                                       &lt;dbl&gt;
+## 1 Pottawattamie        4    80 I-29/80/480 INTERSTATES IN COUNCIL BLUFFS~ 319603
+## 2 Johnson              6    80 I-380/US 218 INTERCHANGE NEAR IOWA CITY    216474
+## 3 Polk                 1    35 NE 36TH ST IN ANKENY TO N OF IA 210        129471
+## 4 Johnson              6    80 1.5 MI E OF IA 1 TO 0.5 MI E OF CO RD X30  124569
+## 5 Benton               6    30 11TH AVE DR TO W JCT US 218                 99938
+## 6 Scott                6    74 IN BETTENDORF AND DAVENPORT (CENTRAL SECT~  85268</code></pre>
+<pre class="r"><code>min_projects &lt;- projects %&gt;% arrange(cost)
+head(min_projects)</code></pre>
+<pre><code>## # A tibble: 6 x 5
+## # Groups:   County, District, Route [6]
+##   County   District Route Location                                          cost
+##   &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;                                            &lt;dbl&gt;
+## 1 Emmet           3    NA 0.35 MI S OF CO RD D53 (SB)                          0
+## 2 Osceola         3    NA ABANDONED RR 0.9 MI S OF CO RD B40 (REMOVE BRID~     0
+## 3 Boone           1    30 1.8 MI W OF DES MOINES RIVER TO W OF SNEDDEN DR      2
+## 4 Warren          5    69 120TH AVE 0.75 MI N OF CO RD G64                    10
+## 5 Franklin        2    35 DRAINAGE DITCH #29 1.3 MI N OF CO RD C70 (SB)       18
+## 6 Davis           5    63 N FABIUS CREEK 2.6 MI N OF MISSOURI STATE LINE      20</code></pre>
+<pre class="r"><code>max_by_district &lt;- projects %&gt;% group_by(District) %&gt;% slice(which.max(cost))
+head(max_by_district)</code></pre>
+<pre><code>## # A tibble: 6 x 5
+## # Groups:   District [6]
+##   County       District Route Location                                      cost
+##   &lt;chr&gt;           &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;                                        &lt;dbl&gt;
+## 1 Polk                1    35 NE 36TH ST IN ANKENY TO N OF IA 210         129471
+## 2 Bremer              2   218 CEDAR RIVER IN JANESVILLE TO IA 116 IN WAV~  38671
+## 3 Plymouth            3    75 N OF MAPLE ST IN HINTON TO S OF 2ND ST IN ~  22043
+## 4 Pottawattam~        4    80 I-29/80/480 INTERSTATES IN COUNCIL BLUFFS ~ 319603
+## 5 Des Moines          5    61 S OF 210TH ST TO N OF MEDIAPOLIS             46155
+## 6 Johnson             6    80 I-380/US 218 INTERCHANGE NEAR IOWA CITY     216474</code></pre>
+<pre class="r"><code>min_by_district &lt;-projects %&gt;% group_by(District) %&gt;% slice(which.min(cost))
+head(min_by_district)</code></pre>
+<pre><code>## # A tibble: 6 x 5
+## # Groups:   District [6]
+##   County   District Route Location                                         cost
+##   &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;                                           &lt;dbl&gt;
+## 1 Boone           1    30 1.8 MI W OF DES MOINES RIVER TO W OF SNEDDEN DR     2
+## 2 Franklin        2    35 DRAINAGE DITCH #29 1.3 MI N OF CO RD C70 (SB)      18
+## 3 Emmet           3    NA 0.35 MI S OF CO RD D53 (SB)                         0
+## 4 Harrison        4    29 LITTLE SIOUX RIVER N OF CO RD F20 INTERCHANGE      75
+## 5 Warren          5    69 120TH AVE 0.75 MI N OF CO RD G64                   10
+## 6 Dubuque         6    20 0.6 MI E OF THE NORTHWEST ARTERIAL IN DUBUQUE      50</code></pre>
+<pre class="r"><code>range &lt;- split(projects, cut(projects$cost, c(0, 50000, 100000, 1000000)))
+head(range)</code></pre>
+<pre><code>## $`(0,5e+04]`
+## # A tibble: 629 x 5
+## # Groups:   County, District, Route [267]
+##    County    District Route Location                                        cost
+##    &lt;chr&gt;        &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;                                          &lt;dbl&gt;
+##  1 Adair            4    25 GREENFIELD TO I-80                              1350
+##  2 Adair            4    25 I-80 INTERCHANGE                                 333
+##  3 Adair            4    80 CASS CO TO IA 25 (WB)                           8977
+##  4 Adair            4    80 IA 25 TO MADISON CO (EB)                        2866
+##  5 Adair            4    92 GRAND RIVER 1.0 MI W OF CO RD P28                490
+##  6 Adair            4    92 W FORK NODAWAY RIVER 1.6 MI E OF CO RD N51      1800
+##  7 Adams            4   148 MIDDLE NODAWAY RIVER 1.8 MI S OF S JCT CO RD ~   712
+##  8 Allamakee        2     9 MISSISSIPPI RIVER BRIDGE IN LANSING            37124
+##  9 Allamakee        2     9 MISSISSIPPI RIVER IN LANSING                     100
+## 10 Allamakee        2    76 MINERAL CREEK 1.6 MI S OF CO RD A26              200
+## # ... with 619 more rows
+## 
+## $`(5e+04,1e+05]`
+## # A tibble: 6 x 5
+## # Groups:   County, District, Route [6]
+##   County   District Route Location                                       cost
+##   &lt;chr&gt;       &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;                                         &lt;dbl&gt;
+## 1 Benton          6    30 11TH AVE DR TO W JCT US 218                   99938
+## 2 Dallas          4    80 US 6/169 IN DE SOTO TO CO RD R16              52496
+## 3 Harrison        4    30 MISSOURI VALLEY BYPASS                        51056
+## 4 Polk            1    35 I-80/235 INTERCHANGE NE OF DES MOINES         61836
+## 5 Scott           6    74 IN BETTENDORF AND DAVENPORT (CENTRAL SECTION) 85268
+## 6 Scott           6    80 MISSISSIPPI RIVER IN LE CLAIRE                50625
+## 
+## $`(1e+05,1e+06]`
+## # A tibble: 4 x 5
+## # Groups:   County, District, Route [3]
+##   County        District Route Location                                     cost
+##   &lt;chr&gt;            &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;                                       &lt;dbl&gt;
+## 1 Johnson              6    80 1.5 MI E OF IA 1 TO 0.5 MI E OF CO RD X30  124569
+## 2 Johnson              6    80 I-380/US 218 INTERCHANGE NEAR IOWA CITY    216474
+## 3 Polk                 1    35 NE 36TH ST IN ANKENY TO N OF IA 210        129471
+## 4 Pottawattamie        4    80 I-29/80/480 INTERSTATES IN COUNCIL BLUFFS~ 319603</code></pre>
+<p>There are 629 projects that are less than $50 million, 6 projects that are between $50 and $100 million, and 4 projects that are more than $100 million. The costs are the total cost of the project over the five years. The cost column is in thousands of dollars. The most expensive project is the I-29/80/480 INTERSTATES IN COUNCIL BLUFFS (CBIS) at $319,603,000 and the least expensive project is 1.8 MI W OF DES MOINES RIVER TO W OF SNEDDEN DR at $2000.</p>
 </div>
 <div id="colin-willenborgproject-coordinator" class="section level2">
 <h2>Colin Willenborg(Project Coordinator)</h2>
