@@ -381,13 +381,13 @@ FiveYear &lt;- FiveYear %&gt;%
   fill(Location, .direction = &quot;down&quot;) %&gt;% 
   rename(District = `Iowa DOT District`, Route = `Project Route`, 
          Work = `Type of Work`) %&gt;%
-  group_by(County, District, Route, Location) %&gt;%
+  group_by(Location) %&gt;%
   fill(Miles, .direction = &quot;down&quot;) %&gt;%
   mutate(District = as.numeric(District))
 
 head(FiveYear)</code></pre>
 <pre><code>## # A tibble: 6 x 20
-## # Groups:   County, District, Route, Location [6]
+## # Groups:   Location [6]
 ##   State County `Latitude\r\n(T~ `Latitude\r\n(D~ Latitude `Longitude\r\n(~
 ##   &lt;chr&gt; &lt;chr&gt;             &lt;dbl&gt;            &lt;dbl&gt; &lt;chr&gt;               &lt;dbl&gt;
 ## 1 Iowa  Adair            412043             41.3 41° 20&#39;~          -942818
@@ -413,7 +413,7 @@ states %&gt;% ggplot(aes(x = long, y = lat)) +
 <p><font size="4"> <strong>How/do bridge/culvert work types related to the federal work types: construction, replacement, reconstruction, maintenance or preservation?</strong></p>
 <p>Created a dataframe containing only bridge and culvert projects list in the Iowa DOT’s 5 Year Program and sorted the projects into the federal work types. Named the dataframe <em>Bridge</em>. SHowing the first 6 records of the dataframe in the output.</p>
 <pre class="r"><code>Bridge &lt;- FiveYear %&gt;%
-  select(County, District, Route, Location, Miles, Work, `2021`,
+  select(Location, Miles, Work, `2021`,
          `2022`, `2023`, `2024`, `2025`) %&gt;%
   filter(grepl(c(&quot;BRIDGE|CULVERT&quot;), Work)) %&gt;%
   mutate(FedWork = str_replace_all(Work, c(&quot;BRIDGE PAINTING|BRIDGE CLEANING&quot; = &quot;Preservation&quot;,
@@ -423,17 +423,16 @@ states %&gt;% ggplot(aes(x = long, y = lat)) +
                                            &quot;BRIDGE NEW|CULVERT NEW|PIPE CULVERTS|BRIDGE WIDENING&quot; = &quot;Construction&quot;)))
   
 head(Bridge)</code></pre>
-<pre><code>## # A tibble: 6 x 12
-## # Groups:   County, District, Route, Location [6]
-##   County District Route Location Miles Work  `2021` `2022` `2023` `2024` `2025`
-##   &lt;chr&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;    &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
-## 1 Adair         4    25 I-80 IN~    NA BRID~     NA    333     NA     NA     NA
-## 2 Adair         4    92 GRAND R~    NA BRID~     NA     NA     NA     NA    490
-## 3 Adair         4    92 W FORK ~    NA BRID~     NA     NA     NA   1800     NA
-## 4 Adams         4   148 MIDDLE ~    NA BRID~    712     NA     NA     NA     NA
-## 5 Allam~        2     9 MISSISS~    NA BRID~     NA     NA     NA  34438     NA
-## 6 Allam~        2     9 MISSISS~    NA BRID~     20     20     20     20     20
-## # ... with 1 more variable: FedWork &lt;chr&gt;</code></pre>
+<pre><code>## # A tibble: 6 x 9
+## # Groups:   Location [6]
+##   Location           Miles Work      `2021` `2022` `2023` `2024` `2025` FedWork 
+##   &lt;chr&gt;              &lt;dbl&gt; &lt;chr&gt;      &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt; &lt;chr&gt;   
+## 1 I-80 INTERCHANGE      NA BRIDGE D~     NA    333     NA     NA     NA Rehabil~
+## 2 GRAND RIVER 1.0 M~    NA BRIDGE D~     NA     NA     NA     NA    490 Rehabil~
+## 3 W FORK NODAWAY RI~    NA BRIDGE R~     NA     NA     NA   1800     NA Replace~
+## 4 MIDDLE NODAWAY RI~    NA BRIDGE D~    712     NA     NA     NA     NA Rehabil~
+## 5 MISSISSIPPI RIVER~    NA BRIDGE R~     NA     NA     NA  34438     NA Replace~
+## 6 MISSISSIPPI RIVER~    NA BRIDGE C~     20     20     20     20     20 Preserv~</code></pre>
 <p><strong>How do funding levels in the 5 Year Program compare to those in the Asset Management Plan?</strong></p>
 <pre class="r"><code>Bri1 &lt;- Bridge %&gt;%
   group_by(FedWork) %&gt;%
@@ -509,7 +508,7 @@ ggplot(Bri1a, aes(FedWork, Cost, fill = Plan)) +
 
 head(Pavement)</code></pre>
 <pre><code>## # A tibble: 6 x 11
-## # Groups:   County, District, Route, Location [4]
+## # Groups:   Location [4]
 ##   County  District Route Location Miles Work  `2021` `2022` `2023` `2024` `2025`
 ##   &lt;chr&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;    &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
 ## 1 Adair          4    25 GREENFI~  12.3 PAVE~   1350     NA     NA     NA     NA

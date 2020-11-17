@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 The 5 Year program is prepared by the Iowa Department of Transportation (Iowa DOT) and identifies transportation projects planned for construction on a annual basis for a period of five years, in this case 2021-2025.  The program includes projects for aviation, transit, railroad, safety, trails and highway.  Project location, county, work type, route, length and annual construction costs are included in the program for each project listed.  The document is updated annually by removing completed projects, introducing new projects, revising project schedules and costs and rescheduling projects as needed.  It is approved by the Iowa DOT commission and provides transparency to the public by being available on the Iowa DOT's website. 
 
-Information in the 5 Year Program assists the Iowa DOT, local public agencies and the federal government in developing a budget, identify needs, project status, documentation requirements and staffing resources.  The document also makes it easier for organizations to compare estimated project costs with actual project costs and track project costs/status over the years, across the state/county and by project.  There is a lot of information in the 5 Year Program, so we focused our analysis on the highway program, which begins on page 50.
+Information in the 5 Year Program can assist the Iowa DOT, local public agencies and the federal government in developing a budget, identifying needs, project status, documentation requirements and staffing resources.  The document also makes it easier for organizations to compare estimated project costs with actual project costs and track project costs/status over the years, across the state/county and by project.  There is a lot of information in the 5 Year Program, so we focused our analysis on the highway program, which begins on page 50.
 
 <font size="5">**Dataset Overview**
 <font size="3">
@@ -239,23 +239,133 @@ districts_2025 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(
 
 So we've seen the impacts of the 5 Year Program at a state level but how can the program be used at a national level?
 
-The code of federal regulation, 23 CFR 515,  requires states to develop an asset management plan that describes how they will manage the national highway system in a financially responsible manner.  There are a lot of requirements in developing the asset management plan, including how other planning documents, such as the 5 Year Program, contribute to managing their assets.  By law, the Iowa DOT only has to include bridge/culvert and pavement assets.  Implementation of the asset management plan is reviewed on an annual basis.  There are penalties if states don't develop and implement an asset management plan according to federal law.
+The code of federal regulation, 23 CFR 515,  requires states to develop an asset management plan that describes how they will manage the national highway system in a financially responsible manner.  There are a lot of requirements in developing the asset management plan, including how other planning documents, such as the 5 Year Program, contributes to managing their assets.  By law, the Iowa DOT only has to include bridge/culvert and pavement assets.  Implementation, which is based on expenditures, is reviewed on an annual basis.  There are penalties if states don't develop and implement an asset management plan according to federal law.
 
 The analysis I performed focuses on how the Iowa DOT's 5 Year program contributes to managing their bridge and pavement assets and compares funding levels in the 5 Year Program to those in the asset management plan.
 
 The Iowa DOT's asset management plan was approved last in 2019 and can be found on their website at:
 
-<div align="center">https://iowadot.gov/systems_planning/fpmam/IowaDOT-TAMP-2019.pdf</div><br>
+<div align="center">https://iowadot.gov/systems_planning/fpmam/IowaDOT-TAMP-2019.pdf</div>
+<div align="left">  
 
-* How/do bridge/culvert work types relate to the federal work types:  construction, replacement, reconstruction, maintenance or preservation?  
+The following questions related to bridge and pavement asses, were explored to determine if there is a relationship between the 5 Year Program and the asset management plan:  
 
-* How do funding levels in the 5 Year Program compare to those in the Asset Management Plan?
+* How/do bridge/culvert and pavement work types in the 5 Year Program relate to the federal work types required by law in the asset management plan:  construction, replacement, reconstruction, maintenance or preservation?  
 
-* Compare the five year total of the 5 Year Program to the Asset Management Plan
+* How do funding levels in the 5 Year Program compare to those in the asset management plan?
 
-<font size="5"> Bridge Assets
+* Compare the five year total of the 5 Year Program to the asset management plan.
 
-```{r }
+<font size="5"> Bridge Assets  <font size="3">  
+  
+The 5 Year Program identifies specific projects/costs whereas the asset management plan identifies funding based on the federal work types of construction, replacement, reconstruction, maintenance or preservation.  To compare the 5 Year Program with the asset management plan I needed to sort the projects into the different federal work types.  
+
+Table 3-1 in the asset management plan, shown below, provides a crosswalk between the Iowa DOT's bridge treatment or work as described in the 5 Year Program and the federal work types as defined by law.
+
+
+<div align="center"> <img src="./Table3_1.jpeg" width="400" height="600" /> 
+
+<div align="left">  
+Based on the information in the table above, I was able to sort the bridge/culvert projects in the 5 Year Program into the federal work types of construction, replacement, reconstruction, maintenance or preservation.  
+
+
+```{r echo=FALSE}
+
+Bridge <- FiveYear %>%
+  select(District, County, Route, Location, Miles, Work, `2021`, `2022`, `2023`, `2024`, `2025`) %>%
+  filter(grepl(c("BRIDGE|CULVERT"), Work)) %>%
+  mutate(FedWork = str_replace_all(Work, c("BRIDGE PAINTING|BRIDGE CLEANING" = "Preservation",
+                                           "CULVERT EXTENSION|CULVERT REPAIR" = "Maintenance",
+                                      "BRIDGE DECK OVERLAY|BRIDGE REHABILITATION" = "Rehabilitation",
+                            "BRIDGE REPLACEMENT|CULVERT REPLACEMENT|BRIDGE REMOVAL" = "Replacement",
+                        "BRIDGE NEW|CULVERT NEW|PIPE CULVERTS|BRIDGE WIDENING" = "Construction")))
+  
+print.data.frame(head(Bridge))
+
+```
+
+Table 6-3 in the asset management plan, shown below, shows the bridge and pavement funding levels by federal work type for 2019 - 2025.
+
+<div align="center"> <img src="./Table6_3.jpeg" width="600" height="400" /> 
+
+<div align="left">  
+
+Using the information in the table above, I compared the funding levels in the 5 Year Program and asset management plan based on the federal work types.  Nothing really stands outs in this comparison; the strongest relationship between the two plans appears to be between the funding levels for rehabilitation and replacement. 
+
+```{r message=FALSE, echo=FALSE, fig.height=8, fig.width=12}
+
+Bri1 <- Bridge %>%
+  group_by(FedWork) %>%
+  summarise(`20215YrPlan` = sum(`2021`/1000, na.rm = TRUE),
+            `20225YrPlan` = sum(`2022`/1000, na.rm = TRUE), 
+            `20235YrPlan` = sum(`2023`/1000, na.rm = TRUE), 
+            `20245YrPlan` = sum(`2024`/1000, na.rm = TRUE),
+            `20255YrPlan` = sum(`2025`/1000, na.rm = TRUE)) %>%
+  add_column(`2021Asset` = c(43, 1, 5, 28, 133),
+             `2022Asset` = c(72, 1, 6, 32, 152),
+             `2023Asset` = c(17, 1, 5, 25, 119),
+             `2024Asset` = c(8, 1, 6, 32, 153),
+             `2025Asset` = c(25, 1, 6, 35, 163)) %>%
+  pivot_longer(`20215YrPlan`:`2025Asset`, names_to="Year", 
+               values_to = "Cost") %>%
+  mutate(Plan = str_replace_all(Year, c("20215YrPlan|20225YrPlan|20235YrPlan|20245YrPlan|20255YrPlan" = "5 Year",
+                      "2021Asset|2022Asset|2023Asset|2024Asset|2025Asset" = "Asset Management"))) %>%
+  mutate(Year2 = str_replace_all(Year, c("20215YrPlan|2021Asset" = "2021", "20225YrPlan|2022Asset" ="2022", 
+                                "20235YrPlan|2023Asset" = "2023", "20245YrPlan|2024Asset" = "2024", 
+                                        "20255YrPlan|2025Asset" = "2025"))) %>%
+  select(-Year) %>%
+  rename(Year = Year2) %>%
+  mutate(Year = as.numeric(Year))
+
+
+ggplot(Bri1, aes(Year, Cost, fill=Plan)) + 
+  geom_bar(stat='identity', position = "dodge") + 
+  ggtitle("Bridge Assets\n 5 Year Program vs Asset Management Plan") + 
+  labs(y="Cost, $Millions", x="") +
+  theme(axis.text.x = element_text(angle = 90, size = 10, vjust = 0.2, hjust = 1)) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.ticks.y=element_blank()) +
+  theme(axis.text.y = element_blank()) +
+  facet_wrap(~FedWork, scales = "free") +
+  geom_text(aes(x=Year,y=Cost,label=paste("$",Cost)), 
+            position = position_dodge(0.9), vjust=-0.5, hjust=0.6, size=2)
+ 
+```
+
+Projects/cost and funding levels can fluctuate, sometimes significantly, from year to year depending on need, so it may be hard to determine if there is any correspondence between the two plans on an annual basis, so I looked at cumulative funding levels for the work types over the five year period.
+
+The figure below shows that there is indeed correspondence between the funding levels in the 5 Year Program and asset management plan.
+
+```{r, message=FALSE, echo=FALSE, fig.height=8, fig.width=12, fig.align='center'}
+
+Bri1a <- Bri1 %>%
+  group_by(FedWork, Plan) %>%
+  summarise(Cost = sum(Cost)) %>%
+  mutate(Cost = round(Cost, 2))
+
+ggplot(Bri1a, aes(FedWork, Cost, fill = Plan)) + 
+  geom_bar(stat='identity', position="dodge") + 
+  ggtitle("Bridge Assets\n Funding Levels Over the 5 Year Period") + 
+  labs(x="", y="Cost, $Millions") +
+  theme(axis.text.x = element_text(angle = 90, size = 10, vjust = 0.2, hjust = 1)) +
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme(axis.ticks.y=element_blank()) +
+  theme(axis.text.y = element_blank()) +
+  geom_text(aes(x=FedWork,y=Cost,label=paste("$",Cost)), 
+            position = position_dodge(0.9), vjust=-0.5, hjust=0.6)
+
+
+```
+
+The difference in total funding between the two plans, for bridge assets, is between 5 1/2 - 6% over the five year period.
+
+```{r message=FALSE, echo=FALSE}
+
+Bri1b <- Bri1a %>%
+  group_by(Plan) %>%
+  summarise(FiveYear = sum(Cost))
+  
+Bri1b
 
 ```
 
@@ -263,11 +373,11 @@ The Iowa DOT's asset management plan was approved last in 2019 and can be found 
 
 <font size="3"> 
 
-* How/do pavement work types relate to the federal work types:  construction, replacement, reconstruction, maintenance or preservation?  
+Table 3-2 in the Iowa DOT's asset management plan, shown below, provides a crosswalk between the pavement treatments, or work as described in the 5 Year Program, and the federal work types.
 
-* How do funding levels in the 5 Year Program compare to those in the Asset Management Plan?
+<div align="center"> <img src="./Table3_2.jpeg" width="400" height="600" /> 
 
-* Compare the five year total of the 5 Year Program to the Asset Management Plan
+<div align="left">  
 
 ```{r }
 
