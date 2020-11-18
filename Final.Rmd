@@ -31,6 +31,7 @@ The 5 Year Program was originally created as a pdf and exported to an excel spre
 library(readxl)
 library(tidyverse)
 library(dplyr)
+library(formattable)
 
 FiveYear <- read_excel('./2021_2025_5YrProg_Highway_Program.xlsx')
 
@@ -347,7 +348,9 @@ Bridge <- FiveYear %>%
                             "BRIDGE REPLACEMENT|CULVERT REPLACEMENT|BRIDGE REMOVAL" = "Replacement",
                         "BRIDGE NEW|CULVERT NEW|PIPE CULVERTS|BRIDGE WIDENING" = "Construction")))
   
-print.data.frame(head(Bridge))
+data.frame(head(Bridge))
+
+formattable(Bridge, list(District=FALSE, County=FALSE, Route=FALSE, Miles=FALSE, `2021`=FALSE, `2022`=FALSE, `2023`=FALSE, `2024`=FALSE, `2025`=FALSE))
 
 ```
 
@@ -359,7 +362,7 @@ Table 6-3 in the asset management plan, shown below, shows the bridge and paveme
 
 Using the information in the table above, I compared the funding levels in the 5 Year Program and asset management plan based on the federal work types.  Nothing really stands outs in this comparison; the strongest relationship between the two plans appears to be between the funding levels for rehabilitation and replacement. 
 
-```{r message=FALSE, echo=FALSE, fig.height=8, fig.width=12}
+```{r message=FALSE, echo=FALSE, fig.height=12, fig.width=16}
 
 Bri1 <- Bridge %>%
   group_by(FedWork) %>%
@@ -389,13 +392,21 @@ ggplot(Bri1, aes(Year, Cost, fill=Plan)) +
   geom_bar(stat='identity', position = "dodge") + 
   ggtitle("Bridge Assets\n 5 Year Program vs Asset Management Plan") + 
   labs(y="Cost, $Millions", x="") +
-  theme(axis.text.x = element_text(angle = 90, size = 10, vjust = 0.2, hjust = 1)) +
+  theme(axis.text.x = element_text(angle = 90, size = 14, vjust = 0.2, hjust = 1)) +
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(axis.ticks.y=element_blank()) +
   theme(axis.text.y = element_blank()) +
   facet_wrap(~FedWork, scales = "free") +
   geom_text(aes(x=Year,y=Cost,label=paste("$",Cost)), 
-            position = position_dodge(0.9), vjust=-0.5, hjust=0.6, size=2)
+            position = position_dodge(0.9), vjust=-0.5, hjust=0.6, size=4) +
+   theme(legend.key.size = unit(1, 'cm'),
+      legend.key.height = unit(1, 'cm'),
+      legend.key.width = unit(1, 'cm'),
+      legend.title = element_text(size=20),
+      legend.text = element_text(size=18)) +
+  theme(axis.title=element_text(size=18)) +
+  theme(plot.title = element_text(size=24)) +
+  theme(strip.text.x = element_text(size = 20))
  
 ```
 
@@ -403,7 +414,7 @@ Projects/cost and funding levels can fluctuate, sometimes significantly, from ye
 
 The figure below shows that there is indeed correspondence between the funding levels in the 5 Year Program and asset management plan.
 
-```{r, message=FALSE, echo=FALSE, fig.height=8, fig.width=12, fig.align='center'}
+```{r, message=FALSE, echo=FALSE, fig.height=10, fig.width=14, fig.align='center'}
 
 Bri1a <- Bri1 %>%
   group_by(FedWork, Plan) %>%
@@ -414,12 +425,19 @@ ggplot(Bri1a, aes(FedWork, Cost, fill = Plan)) +
   geom_bar(stat='identity', position="dodge") + 
   ggtitle("Bridge Assets\n Funding Levels Over the 5 Year Period") + 
   labs(x="", y="Cost, $Millions") +
-  theme(axis.text.x = element_text(angle = 90, size = 10, vjust = 0.2, hjust = 1)) +
+  theme(axis.text.x = element_text(angle = 90, size = 16, vjust = 0.2, hjust = 1)) +
   theme(plot.title = element_text(hjust = 0.5)) + 
   theme(axis.ticks.y=element_blank()) +
   theme(axis.text.y = element_blank()) +
   geom_text(aes(x=FedWork,y=Cost,label=paste("$",Cost)), 
-            position = position_dodge(0.9), vjust=-0.5, hjust=0.6)
+            position = position_dodge(0.9), vjust=-0.5, hjust=0.6, size=6) +
+  theme(legend.key.size = unit(1, 'cm'),
+      legend.key.height = unit(1, 'cm'),
+      legend.key.width = unit(1, 'cm'),
+      legend.title = element_text(size=18),
+      legend.text = element_text(size=16)) +
+  theme(axis.title=element_text(size=16)) +
+  theme(plot.title = element_text(size=22))
 
 
 ```
@@ -430,8 +448,9 @@ The difference in total funding between the two plans, for bridge assets, is bet
 
 Bri1b <- Bri1a %>%
   group_by(Plan) %>%
-  summarise(FiveYear = sum(Cost))
-  
+  summarise(FiveYear = round((sum(Cost)/1000), 2)) %>%
+  rename('Cost ($Billions)' = FiveYear)
+
 Bri1b
 
 ```
@@ -446,6 +465,66 @@ Table 3-2 in the Iowa DOT's asset management plan, shown below, provides a cross
 
 <div align="left">  
 
-```{r }
+Using a process similar to the one described for the bridge asset comparison, I began to sort the pavement projects in the 5 Year Program into the federal work types.  Unfortunately, the pavement work, described in the 5 Year Program, isn't as detailed as the bridge work and I wasn't able to categorize the pavement projects by federal work type.  Consequently, I also wasn't able to compare the funding levels by work type in the 5 Year Program with those in the asset management plan.  This doesn't mean tha the 5 Year Program is wrong or that the asset management plan doesn't comply with federal regulation.  It just mean that it work take some work to be able to determine if the pavement projects in the 5 Year Program relate to the funding levels of the pavement assets described in the asset management plan.  
+
+Just because I couldn't sort the pavement projects in the 5 Year Program into the federal work types in the asset management plan doesn't mean that I wasn't able to compare annual funding levels between the two plans.  
+
+```{r message=FALSE, echo=FALSE, fig.height=8, fig.width=12, fig.align='center'}
+
+Pavement <- FiveYear %>%
+  select(County, District, Route, Location, Miles, Work, `2021`,
+         `2022`, `2023`, `2024`, `2025`) %>%
+  filter(grepl(c("GRADE|PAVE|PAVING|PAVEMENT|GRADING|RIGHT|SLOPE|TRAFFIC|EROSION|BARRIER|MISCELLANEOUS|NOISE"), Work))
+
+Pave1 <- Pavement %>%
+  pivot_longer('2021':'2025', names_to='Year', values_to='Cost') %>%
+  filter(Cost != "NA") %>%
+  group_by(Year) %>%
+  summarise(Cost = sum(Cost)/1000) %>%
+  mutate(Cost = round(Cost, 2)) %>%
+  add_column(Plan = c( "5 Year", "5 Year", "5 Year", "5 Year", "5 Year")) %>%
+  relocate(Plan) %>%
+  add_row(Cost = c(511, 388, 535, 478, 459), 
+          Plan = c("Asset Mgmt", "Asset Mgmt", "Asset Mgmt", "Asset Mgmt", "Asset Mgmt"), 
+          Year = c("2021", "2022", "2023", "2024", "2025"))
+
+ggplot(Pave1, aes(Year, Cost, fill = Plan)) + 
+  geom_bar(stat='identity', position="dodge") + 
+  ggtitle("Pavement Assets\n Funding Levels Over the 5 Year Period") + 
+  labs(x="", y="Cost, $Millions") +
+  theme(axis.text.x = element_text(angle = 90, size = 14, vjust = 0.2, hjust = 1)) +
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme(axis.ticks.y=element_blank()) +
+  theme(axis.text.y = element_blank()) +
+  geom_text(aes(x=Year,y=Cost,label=paste("$",Cost)), 
+            position = position_dodge(0.9), vjust=-0.5, hjust=0.6, size=6) +
+  theme(legend.key.size = unit(1, 'cm'),
+      legend.key.height = unit(1, 'cm'),
+      legend.key.width = unit(1, 'cm'),
+      legend.title = element_text(size=18),
+      legend.text = element_text(size=16)) +
+  theme(axis.title=element_text(size=16)) +
+  theme(plot.title = element_text(size=22))
+
 
 ```
+
+
+The figure above 
+
+Over the five year period there is a difference of over 20% between the two plans.  This leds me to further believe there is something else going on with the pavement projects listed in the 5 Year Program that isn't easily identified without discussions with the Iowa DOT.
+
+```{r message=FALSE, echo=FALSE}
+
+Pave2 <- Pave1 %>%
+  group_by(Plan)%>%
+  summarise(Cost = round((sum(Cost)/1000), 2)) %>%
+  rename('Cost ($Billions)' = Cost)
+
+Pave2
+ 
+```
+
+<font size="5"> Conclusion
+
+<font size="3"> 
