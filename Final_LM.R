@@ -15,7 +15,16 @@ FiveYear <- FiveYear %>%
   group_by(County, District, Route, Location) %>%
   fill(Miles, .direction = "down") %>%
   mutate(District = as.numeric(District))
-  
+
+FiveYearCosts <- FiveYear %>%
+  select(`2021`, `2022`, `2023`, `2024`, `2025`) %>%
+  summarise( `2021Cost` = sum(`2021`, na.rm = TRUE),
+             `2022Cost` = sum(`2022`, na.rm = TRUE),
+             `2023Cost` = sum(`2023`, na.rm = TRUE),
+             `2024Cost` = sum(`2024`, na.rm = TRUE),
+             `2025Cost` = sum(`2025`, na.rm = TRUE))
+
+??ungroup()  
    
 str(FiveYear)
 
@@ -159,7 +168,10 @@ ggplot(Bri3, aes(Year, Cost, fill=Plan)) +
 ##  scale_fill_manual(values = colors, labels = c("5 Year Plan", 
                                                 "Asset Management Plan"), guide = "legend")
 
-??pivot_wider
+??pivot_longer
+
+Bri3a <- Bri3 %>%
+  pivot_wider(names_from = Year, values_from = Cost)
 
 Bri3a <- Bri3 %>%
 ##  mutate(Plan = str_replace_all(Year, c("20215YrPlan|20225YrPlan|20235YrPlan|20245YrPlan|20255YrPlan" = "5 Year",
@@ -215,6 +227,8 @@ Pave2 <- Pave1 %>%
   group_by(Plan)%>%
   summarise(Cost = sum(Cost))
 
+Pave2
+
 ggplot(Pave1, aes(Year, Cost, fill = Plan)) + 
   geom_bar(stat='identity', position="dodge") + 
   ggtitle("Pavement Assets\n Funding Levels Over the 5 Year Period") + 
@@ -225,3 +239,6 @@ ggplot(Pave1, aes(Year, Cost, fill = Plan)) +
   theme(axis.text.y = element_blank()) +
   geom_text(aes(x=Year,y=Cost,label=paste("$",Cost)), 
             position = position_dodge(0.9), vjust=-0.5, hjust=0.6)
+
+
+
