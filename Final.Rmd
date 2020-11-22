@@ -34,6 +34,10 @@ library(dplyr)
 library(formattable)
 
 FiveYear <- read_excel('./2021_2025_5YrProg_Highway_Program.xlsx')
+IowaPop <- read_excel('./Iowa_Population.xlsx')
+
+IowaPop <- IowaPop %>% 
+  separate(Area, c("subregion", NA, NA), sep=" ")
 
 ##str(FiveYear) 
 ##names(FiveYear)
@@ -144,9 +148,100 @@ twentyfive <- inner_join(twentyfive, us_counties, by = "subregion")
 
 * What work types are associated with interchanges?  Costs? What routes are interchanges being proposed on?
 
-```{r }
+Setup
+
+```{r, warning=FALSE, message=FALSE }
+yearplan <- read_excel('./2021_2025_5YrProg_Highway_Program.xlsx')
+
+
+cleanplan <- yearplan %>%
+  fill(Location, .direction = "down") %>% 
+  rename(District = `Iowa DOT District`, Route = `Project Route`, 
+         Work = `Type of Work`) %>%
+  group_by(County, District, Route, Location) %>%
+  fill(Miles, .direction = "down") %>%
+  mutate(District = as.numeric(District)) %>%
+  select(State, County, District, Route, Location, 
+         Miles, Work, `2021`, `2022`, `2023`, `2024`, `2025`)
+cleanplan['totalProjection'] <- rowSums(cleanplan[, c("2021", "2022", "2023", "2024",
+                                                      "2025")], na.rm = TRUE)
+countyLines <- map_data("county")
+
+
+#Cleaning City Population data
+cities <- read_excel("./SUB-IP-EST2019-ANNRES-19.xlsx")
+cities <- cities %>% select(`table with row headers in column A and column headers in rows 3 through 4 (leading dots indicate sub-parts)`, `...13`) %>% 
+  rename(Population = "...13", Area = "table with row headers in column A and column headers in rows 3 through 4 (leading dots indicate sub-parts)")
+cities <- cities[-c(1,2,3),]
+cities <- cities %>% separate(Area, into = c("City", "State"), sep = ", ") %>% select(-State)
+```
+
+Work Types Associated with Interchanges
+
+```{r, warning=FALSE, message=FALSE}
+
+  
+interchange <- cleanplan %>% filter(grepl('INTERCHANGE', Location))
+
+interchange["County"] <- tolower(interchange$County)
+interchange["Route"] <- as.character(interchange$Route)
+
+interchange %>% group_by(Work) %>% summarise(sum = n()) %>% 
+  ggplot(aes(x=Work, weight=sum)) + geom_bar() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  labs(title = "Count of Interchange Work Plans per Work Type", x = "Type of Work")
 
 ```
+
+Bridge Deck Overlays seem to be the most common type of work on the interchanges. It seems that a great number of planned projects are related to maintenance or additions for the sake of drivers (traffic signs, traffic signals, lighting).
+
+Costs of projects Involving interchanges
+
+```{r, warning=FALSE, message=FALSE}
+
+plot1 <- interchange %>% ggplot(aes(y = totalProjection, x= Work)) + geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
+  labs(x = "Type of Work", y = "Cost in Thousands of Dollars", title = "Cost of Projects by Type of Work")
+  
+plot1
+
+plot1 + coord_cartesian(ylim = c(20, 16000))
+```
+
+The first chart shows that the grade and pave and new bridge projects are the most expensive. Now we zoom in the plot ignoring the outliers to better see the other categories. From this chart we can see that most of the projects are relatively cheap in comparison (under 15 million dollars), with only bridge replacement, grading, and paving projects frequently approaching the this upper bound.
+
+Counties with Proposed Interchanges
+
+```{r, warning=FALSE, message=FALSE}
+
+iowaLines <- countyLines %>% filter(region == "iowa")
+iowaLines <- iowaLines %>% select(long, lat, group, order, subregion)
+joinedInter <- iowaLines %>% left_join(interchange, by = c(subregion = "County"))
+
+joinedInter["presentInIntersectionData"] <- ifelse(is.na(joinedInter$District), "no", "yes")
+
+
+joinedInter %>% ggplot(aes(x = long, y = lat, fill = presentInIntersectionData)) + 
+  geom_polygon(aes(group = group)) + coord_map() #+ theme_map()
+
+```
+
+![Retreived from http://ontheworldmap.com/usa/state/iowa/iowa-road-map.html](iowa-road-map.jpg)
+
+The upper of the two charts is a map that highlights counties that have planned interchange projects within their borders. Meanwhile, the lower of the two charts is a state map containing the major highways of Iowa. In it, the blue highways are the interstate highways, and the highlighted counties match up with the counties along the route of the interstates. This shows us that most interchanges are on the interstates, meaning routes 29, 35, 80, and 380.
+
+Routes with proposed interchanges
+
+```{r, warning=FALSE, message=FALSE}
+
+routeData <- interchange %>% group_by(Route) %>% summarise(sum = n())
+routeData["Route"] <- factor(routeData$Route, levels = c("6", "9", "20", "25", "29", "30", "35", "59", 
+                                                         "74", "80", "141", "235", "280", "380"))
+routeData %>% ggplot(aes(x= Route, weight = sum)) + geom_bar() + 
+  labs(title = "Count of Interchange Plans by Route")
+```
+
+The previous assumption can be shown in this chart, which shows the routes interchanges are planned for. 29, 35, 80, and 380 are the routes with the most interchanges, and the other routes are likely the routes 29, 35, 80, or 380 are interchanging with.
 
 ## Adam Brandt
 
@@ -186,10 +281,9 @@ There are 629 projects that are less than $50 million, 6 projects that are betwe
 
 <font size="3"> 
 
-* Project types and costs between Iowa DOT Districts and years.
+An important part of any budget from year to year is comparing it and seeing where the money is going. In this five year plan the money can be analyzed in different ways. One of these ways is by looking at the DOT districts. There are 6 districts in Iowa. The graphs in this next section look at the districts and groups the counties by DOT district and adds up the total budget of all projects in those counties. So the question that I am trying to answer is what does the spending break down look like by DOT district and what is the spending breakdown by person per DOT district. I will get into these two questions below. 
 
 ```{r}
-head(FiveYear)
 districts <- FiveYear %>% 
   select(County, District) %>% 
   mutate(subregion = tolower(County))
@@ -273,6 +367,7 @@ districts_2025 <- inner_join(districts_2025, ia, by = "District")
 districts_2025 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1)
 
 ```
+In the year 2021 the Iowa DOT is spending around 782 million dollars on different projects. The majority of the spending being in districts 4 and 6. District 6 is where the Iowa capital, Iowa City, is and makes sense why that has a lot of money being spent on infrastructure. In 2022 The spending goes down from 782 million to 572 million dollars. The majority of the spending staying focused in the districts of 4 and 6. One reason for this could be that in 2022 the projects are starting to finish up and have less expensive work to be done and have gaps in between projects resulting in a little less spending for the year. In 2023 the total spending is 567 million. Now that we have two years with upper 500 million dollars spent we can start to determine what is the average spending per year and what years are outliers. To really understand the totals we need to also look at the totals in 2024 and 2025 which are 530 million and 511 million dollars respectively. This goes to show that the year 2021 is in fact an outlier and Iowa normally spends around 500-600 million dollars on projects a year. This could be a result of a bigger project that needs to get done starting in 2021 or multiple projects needing to be done that normally are not done on a year to year basis.
 
 ```{r}
 FiveYear_Pop <- left_join(FiveYear, IowaPop, by=c("County"="subregion")) %>% 
@@ -301,6 +396,7 @@ districts_2025_totals <- left_join(districts_2025_totals, FiveYear_Pop)
 districts_2025_totals %>% 
   mutate(spent_per_pop = (total* 1000) / total_pop)
 ```
+Next I looked at the total spending per year based on the total population by DOT district. Based on the previous finding of 2021 being the most expensive year by over 100 million dollars it makes sense that when looking at a per population basis the spending had the highest numbers in 2021. In 2021 not only was the highest district at 620 dollars per person it was also the year that had 4 of the 6 districts above 200 dollars per person. None of the other years had 200 or more dollars per person for 4 districts the most was 3. The important thing about looking at it as a per person basis shows us how much benefit each county is getting. If one county has 600 dollars spent per person then there must be some heavy focus there and the roads in other districts that could use repaving or other maintance may not be getting the work that needs to be done. The fact that as the years go up it gets closer to being even between the counties on a per person basis shows the money is being spread out throughout Iowa. This should help people to see their tax dollars at work fixing their roads and bridges. 
 
 ## Lisa McDaniel
 
@@ -346,8 +442,8 @@ Based on the information in the table above, I was able to sort the bridge/culve
 
 ```{r echo=FALSE}
 
-Bridge <- FiveYear %>%
-  select(District, County, Route, Location, Miles, Work, `2021`, `2022`, `2023`, `2024`, `2025`) %>%
+Bridge <- FiveYear %>% 
+  select(District, County, Route, Location, Miles, Work, `2021`, `2022`, `2023`, `2024`, `2025`) %>% 
   filter(grepl(c("BRIDGE|CULVERT"), Work)) %>%
   mutate(FedWork = str_replace_all(Work, c("BRIDGE PAINTING|BRIDGE CLEANING" = "Preservation",
                                            "CULVERT EXTENSION|CULVERT REPAIR" = "Maintenance",
@@ -373,9 +469,8 @@ Table 6-3 in the asset management plan, shown below, shows the bridge and paveme
 Using the information in the table above, I compared the funding levels in the 5 Year Program and asset management plan based on the federal work types.  Nothing really stands outs in this comparison; the strongest relationship between the two plans appears to be between the funding levels for rehabilitation and replacement. 
 
 ```{r message=FALSE, echo=FALSE, fig.height=12, fig.width=16}
-
 Bri1 <- Bridge %>%
-  group_by(FedWork) %>%
+  group_by(`Asset Mgmt`) %>%
   summarise(`20215YrPlan` = sum(`2021`/1000, na.rm = TRUE),
             `20225YrPlan` = sum(`2022`/1000, na.rm = TRUE), 
             `20235YrPlan` = sum(`2023`/1000, na.rm = TRUE), 
@@ -406,7 +501,7 @@ ggplot(Bri1, aes(Year, Cost, fill=Plan)) +
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(axis.ticks.y=element_blank()) +
   theme(axis.text.y = element_blank()) +
-  facet_wrap(~FedWork, scales = "free") +
+  facet_wrap(~`Asset Mgmt`, scales = "free") +
   geom_text(aes(x=Year,y=Cost,label=paste("$",Cost)), 
             position = position_dodge(0.9), vjust=-0.5, hjust=0.6, size=4) +
    theme(legend.key.size = unit(1, 'cm'),
@@ -427,11 +522,11 @@ The figure below shows the five year funding levels between the 5 Year Program a
 ```{r, message=FALSE, echo=FALSE, fig.height=10, fig.width=14, fig.align='center'}
 
 Bri1a <- Bri1 %>%
-  group_by(FedWork, Plan) %>%
+  group_by(`Asset Mgmt`, Plan) %>%
   summarise(Cost = sum(Cost)) %>%
   mutate(Cost = round(Cost, 2))
 
-ggplot(Bri1a, aes(FedWork, Cost, fill = Plan)) + 
+ggplot(Bri1a, aes(`Asset Mgmt`, Cost, fill = Plan)) + 
   geom_bar(stat='identity', position="dodge") + 
   ggtitle("Bridge Assets\n Funding Levels Over the 5 Year Period") + 
   labs(x="", y="Cost, $Millions") +
@@ -439,7 +534,7 @@ ggplot(Bri1a, aes(FedWork, Cost, fill = Plan)) +
   theme(plot.title = element_text(hjust = 0.5)) + 
   theme(axis.ticks.y=element_blank()) +
   theme(axis.text.y = element_blank()) +
-  geom_text(aes(x=FedWork,y=Cost,label=paste("$",Cost)), 
+  geom_text(aes(x=`Asset Mgmt`,y=Cost,label=paste("$",Cost)), 
             position = position_dodge(0.9), vjust=-0.5, hjust=0.6, size=6) +
   theme(legend.key.size = unit(1, 'cm'),
       legend.key.height = unit(1, 'cm'),
