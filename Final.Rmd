@@ -283,7 +283,7 @@ There are 629 projects that are less than $50 million, 6 projects that are betwe
 
 An important part of any budget from year to year is comparing it and seeing where the money is going. In this five year plan the money can be analyzed in different ways. One of these ways is by looking at the DOT districts. There are 6 districts in Iowa. The graphs in this next section look at the districts and groups the counties by DOT district and adds up the total budget of all projects in those counties. So the question that I am trying to answer is what does the spending break down look like by DOT district and what is the spending breakdown by person per DOT district. I will get into these two questions below. 
 
-```{r message=FALSE, echo=FALSE, fig.height=8, fig.width=12, fig.align='center'}
+```{r message=FALSE, echo=FALSE, fig.align='center'}
 districts <- FiveYear %>% 
   select(County, District) %>% 
   mutate(subregion = tolower(County))
@@ -369,7 +369,7 @@ districts_2025 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(
 ```
 In the year 2021 the Iowa DOT is spending around 782 million dollars on different projects. The majority of the spending being in districts 4 and 6. District 6 is where the Iowa capital, Iowa City, is and makes sense why that has a lot of money being spent on infrastructure. In 2022 The spending goes down from 782 million to 572 million dollars. The majority of the spending staying focused in the districts of 4 and 6. One reason for this could be that in 2022 the projects are starting to finish up and have less expensive work to be done and have gaps in between projects resulting in a little less spending for the year. In 2023 the total spending is 567 million. Now that we have two years with upper 500 million dollars spent we can start to determine what is the average spending per year and what years are outliers. To really understand the totals we need to also look at the totals in 2024 and 2025 which are 530 million and 511 million dollars respectively. This goes to show that the year 2021 is in fact an outlier and Iowa normally spends around 500-600 million dollars on projects a year. This could be a result of a bigger project that needs to get done starting in 2021 or multiple projects needing to be done that normally are not done on a year to year basis.
 
-```{r message=FALSE, echo=FALSE, fig.height=8, fig.width=12, fig.align='center'}
+```{r message=FALSE, echo=FALSE, fig.align='center'}
 FiveYear_Pop <- left_join(FiveYear, IowaPop, by=c("County"="subregion")) %>% 
   rename(population = "2019") %>% 
   group_by(District) %>% 
