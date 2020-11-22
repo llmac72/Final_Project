@@ -147,9 +147,100 @@ twentyfive <- inner_join(twentyfive, us_counties, by = "subregion")
 
 * What work types are associated with interchanges?  Costs? What routes are interchanges being proposed on?
 
-```{r }
+Setup
+
+```{r, warning=FALSE, message=FALSE }
+yearplan <- read_excel('./2021_2025_5YrProg_Highway_Program.xlsx')
+
+
+cleanplan <- yearplan %>%
+  fill(Location, .direction = "down") %>% 
+  rename(District = `Iowa DOT District`, Route = `Project Route`, 
+         Work = `Type of Work`) %>%
+  group_by(County, District, Route, Location) %>%
+  fill(Miles, .direction = "down") %>%
+  mutate(District = as.numeric(District)) %>%
+  select(State, County, District, Route, Location, 
+         Miles, Work, `2021`, `2022`, `2023`, `2024`, `2025`)
+cleanplan['totalProjection'] <- rowSums(cleanplan[, c("2021", "2022", "2023", "2024",
+                                                      "2025")], na.rm = TRUE)
+countyLines <- map_data("county")
+
+
+#Cleaning City Population data
+cities <- read_excel("./SUB-IP-EST2019-ANNRES-19.xlsx")
+cities <- cities %>% select(`table with row headers in column A and column headers in rows 3 through 4 (leading dots indicate sub-parts)`, `...13`) %>% 
+  rename(Population = "...13", Area = "table with row headers in column A and column headers in rows 3 through 4 (leading dots indicate sub-parts)")
+cities <- cities[-c(1,2,3),]
+cities <- cities %>% separate(Area, into = c("City", "State"), sep = ", ") %>% select(-State)
+```
+
+Work Types Associated with Interchanges
+
+```{r, warning=FALSE, message=FALSE}
+
+  
+interchange <- cleanplan %>% filter(grepl('INTERCHANGE', Location))
+
+interchange["County"] <- tolower(interchange$County)
+interchange["Route"] <- as.character(interchange$Route)
+
+interchange %>% group_by(Work) %>% summarise(sum = n()) %>% 
+  ggplot(aes(x=Work, weight=sum)) + geom_bar() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  labs(title = "Count of Interchange Work Plans per Work Type", x = "Type of Work")
 
 ```
+
+Bridge Deck Overlays seem to be the most common type of work on the interchanges. It seems that a great number of planned projects are related to maintenance or additions for the sake of drivers (traffic signs, traffic signals, lighting).
+
+Costs of projects Involving interchanges
+
+```{r, warning=FALSE, message=FALSE}
+
+plot1 <- interchange %>% ggplot(aes(y = totalProjection, x= Work)) + geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
+  labs(x = "Type of Work", y = "Cost in Thousands of Dollars", title = "Cost of Projects by Type of Work")
+  
+plot1
+
+plot1 + coord_cartesian(ylim = c(20, 16000))
+```
+
+The first chart shows that the grade and pave and new bridge projects are the most expensive. Now we zoom in the plot ignoring the outliers to better see the other categories. From this chart we can see that most of the projects are relatively cheap in comparison (under 15 million dollars), with only bridge replacement, grading, and paving projects frequently approaching the this upper bound.
+
+Counties with Proposed Interchanges
+
+```{r, warning=FALSE, message=FALSE}
+
+iowaLines <- countyLines %>% filter(region == "iowa")
+iowaLines <- iowaLines %>% select(long, lat, group, order, subregion)
+joinedInter <- iowaLines %>% left_join(interchange, by = c(subregion = "County"))
+
+joinedInter["presentInIntersectionData"] <- ifelse(is.na(joinedInter$District), "no", "yes")
+
+
+joinedInter %>% ggplot(aes(x = long, y = lat, fill = presentInIntersectionData)) + 
+  geom_polygon(aes(group = group)) + coord_map() #+ theme_map()
+
+```
+
+![Retreived from http://ontheworldmap.com/usa/state/iowa/iowa-road-map.html](iowa-road-map.jpg)
+
+The upper of the two charts is a map that highlights counties that have planned interchange projects within their borders. Meanwhile, the lower of the two charts is a state map containing the major highways of Iowa. In it, the blue highways are the interstate highways, and the highlighted counties match up with the counties along the route of the interstates. This shows us that most interchanges are on the interstates, meaning routes 29, 35, 80, and 380.
+
+Routes with proposed interchanges
+
+```{r, warning=FALSE, message=FALSE}
+
+routeData <- interchange %>% group_by(Route) %>% summarise(sum = n())
+routeData["Route"] <- factor(routeData$Route, levels = c("6", "9", "20", "25", "29", "30", "35", "59", 
+                                                         "74", "80", "141", "235", "280", "380"))
+routeData %>% ggplot(aes(x= Route, weight = sum)) + geom_bar() + 
+  labs(title = "Count of Interchange Plans by Route")
+```
+
+The previous assumption can be shown in this chart, which shows the routes interchanges are planned for. 29, 35, 80, and 380 are the routes with the most interchanges, and the other routes are likely the routes 29, 35, 80, or 380 are interchanging with.
 
 ## Adam Brandt
 
