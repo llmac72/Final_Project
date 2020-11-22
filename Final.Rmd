@@ -148,9 +148,7 @@ twentyfive <- inner_join(twentyfive, us_counties, by = "subregion")
 
 * What work types are associated with interchanges?  Costs? What routes are interchanges being proposed on?
 
-Setup
-
-```{r, warning=FALSE, message=FALSE }
+```{r, warning=FALSE, message=FALSE, include=FALSE }
 yearplan <- read_excel('./2021_2025_5YrProg_Highway_Program.xlsx')
 
 
@@ -178,7 +176,7 @@ cities <- cities %>% separate(Area, into = c("City", "State"), sep = ", ") %>% s
 
 Work Types Associated with Interchanges
 
-```{r, warning=FALSE, message=FALSE}
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
 
   
 interchange <- cleanplan %>% filter(grepl('INTERCHANGE', Location))
@@ -197,7 +195,7 @@ Bridge Deck Overlays seem to be the most common type of work on the interchanges
 
 Costs of projects Involving interchanges
 
-```{r, warning=FALSE, message=FALSE}
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
 
 plot1 <- interchange %>% ggplot(aes(y = totalProjection, x= Work)) + geom_boxplot() +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
@@ -212,7 +210,7 @@ The first chart shows that the grade and pave and new bridge projects are the mo
 
 Counties with Proposed Interchanges
 
-```{r, warning=FALSE, message=FALSE}
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
 
 iowaLines <- countyLines %>% filter(region == "iowa")
 iowaLines <- iowaLines %>% select(long, lat, group, order, subregion)
@@ -232,7 +230,7 @@ The upper of the two charts is a map that highlights counties that have planned 
 
 Routes with proposed interchanges
 
-```{r, warning=FALSE, message=FALSE}
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
 
 routeData <- interchange %>% group_by(Route) %>% summarise(sum = n())
 routeData["Route"] <- factor(routeData$Route, levels = c("6", "9", "20", "25", "29", "30", "35", "59", 
