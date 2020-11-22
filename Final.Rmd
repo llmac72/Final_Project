@@ -26,7 +26,7 @@ The 5 Year Program can be found on the Iowa DOT's website at:
 
 The 5 Year Program was originally created as a pdf and exported to an excel spreadsheet.  The conversion was a bit messy so quality assurance (QA) was done to ensure that project costs were correct and in the correct year.  Several columns were added to the dataset including Iowa DOT District, county latitude and longitude and projects rescheduled in case the Highway Trust Funds becomes insolvent. We also *filled down* the project location and miles for each work type and renamed several columns.  As each of us explored the data, we continued to make various changes/revisions specific to our individual analysis.
 
-```{r message=FALSE, echo = TRUE, results = "hide"}
+```{r message=FALSE, echo = TRUE}
 
 library(readxl)
 library(tidyverse)
@@ -35,8 +35,8 @@ library(formattable)
 
 FiveYear <- read_excel('./2021_2025_5YrProg_Highway_Program.xlsx')
 
-str(FiveYear) 
-names(FiveYear)
+##str(FiveYear) 
+##names(FiveYear)
 
 FiveYear <- FiveYear %>% 
   fill(Location, .direction = "down") %>% 
@@ -46,6 +46,7 @@ FiveYear <- FiveYear %>%
   fill(Miles, .direction = "down") %>%
   mutate(District = as.numeric(District))
   
+head(FiveYear)
 
 ```
 
@@ -316,7 +317,7 @@ The Iowa DOT's asset management plan was approved last in 2019 and can be found 
 <div align="center">https://iowadot.gov/systems_planning/fpmam/IowaDOT-TAMP-2019.pdf</div>
 <div align="left">  
 
-The following questions related to bridge and pavement asses, were explored to determine if there is a relationship between the 5 Year Program and the asset management plan:  
+The following questions related to bridge and pavement assets, were explored to determine if there is a relationship between the 5 Year Program and the asset management plan:  
 
 * How/do bridge/culvert and pavement work types in the 5 Year Program relate to the federal work types required by law in the asset management plan:  construction, replacement, reconstruction, maintenance or preservation?  
 
@@ -338,12 +339,10 @@ The 5 Year Program identifies specific projects/costs whereas the asset manageme
 
 Table 3-1 in the asset management plan, shown below, provides a crosswalk between the Iowa DOT's bridge treatment or work as described in the 5 Year Program and the federal work types as defined by law.
 
-
 <div align="center"> <img src="./Table3_1.jpeg" width="400" height="600" /> 
 
 <div align="left">  
 Based on the information in the table above, I was able to sort the bridge/culvert projects in the 5 Year Program into the federal work types of construction, replacement, reconstruction, maintenance or preservation.  
-
 
 ```{r echo=FALSE}
 
@@ -540,3 +539,17 @@ Pave2
 <font size="5"> Conclusion
 
 <font size="3"> 
+
+The Iowa DOT 5 Year Program contains a wealth of information on construction projects planned between 2021-2025.  Number/type of project, location, county, Iowa DOT District, route, estimated project costs and the relationship between the 5 Year Program and Asset Management plan were explored.  The following conclusions were developed based on the analysis:
+
+*  There are 639 projects in the 5 Year program with bridge deck overlay and bridge replacement being the most common type of work planned.
+*  Polk, Pottawattamie and Linn counties have the most projects planned during 2021-2025.  These counties also have the most spending over the 5 year period, supporting the number of projects planned.  Two of the top three most expensive projects are located in Polk and Pottawattamie counties. 
+*  Interchange projects are typically less then $15 million with most of the money being spent on bridge (new or replacement), grading and pavement.  Most of the interchange work is concentrated on the interstates (I-29, I-35, I-80, I-380).
+*  The most expensive project is the I-29/80/480 interchange in Council Bluffs at $319,603,000.
+*  The least expensive project is 1.8 mile west of the Des Moines River to west of Snedden Drive at $2,000.
+*  629 projects cost less than $50 million, 6 project cost between $50 million and $100 million and 4 projects cost greater than $100 million.
+*  District 4 has the most spending per person during 2021 and 2022.  In the remaining years the spending per person starts to be more evenly distributed among the districts.  
+*  For bridge assets, there is a relationship between the funding in the 5 Year Program and the asset management program.  The difference between the funding levels is about 5.3% over the 5 year period.
+*  For the pavement assets, a relationship between the two documents is not easily identified without further discussions with the Iowa DOT.
+
+Conclusions developed from the analysis of the 5 Year Program describe the work type and location of projects within Iowa.  The information can be used to determine project status/cost, documentation requirements, staffing resources and funding levels planned to manage bridge and pavement assets.
