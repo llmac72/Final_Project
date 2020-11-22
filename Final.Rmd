@@ -421,8 +421,6 @@ The following questions related to bridge and pavement assets, were explored to 
 
 * Compare the five year total of the 5 Year Program to the asset management plan.
 
-<font size="5"> Bridge Assets  <font size="3">  
-  
 Additional data cleaning and wrangling performed as a part of the analysis included:
 
 * adding/removing/renaming/filtering/formatting columns
@@ -431,8 +429,9 @@ Additional data cleaning and wrangling performed as a part of the analysis inclu
 * adding in rows of data
 * performing calculations
 
-The 5 Year Program identifies specific projects/costs whereas the asset management plan identifies funding based on the federal work types of construction, replacement, reconstruction, maintenance or preservation.  To compare the 5 Year Program with the asset management plan I needed to sort the projects into the different federal work types.  
+The 5 Year Program identifies specific projects/costs whereas the asset management plan identifies funding based on the federal work types of construction, replacement, reconstruction, maintenance or preservation.  To compare the 5 Year Program with the asset management plan I needed to sort the projects into the different federal work types. 
 
+<font size="5"> Bridge Assets  <font size="3">  
 Table 3-1 in the asset management plan, shown below, provides a crosswalk between the Iowa DOT's bridge treatment or work as described in the 5 Year Program and the federal work types as defined by law.
 
 <div align="center"> <img src="./Table3_1.jpeg" width="400" height="600" /> 
@@ -452,7 +451,7 @@ Bridge <- FiveYear %>%
                         "BRIDGE NEW|CULVERT NEW|PIPE CULVERTS|BRIDGE WIDENING" = "Construction"))) %>%
   rename(`5 Year Program` = Work, `Asset Mgmt` = FedWork)
   
-data.frame(head(Bridge))
+##data.frame(head(Bridge))
 
 b <- formattable(Bridge, list(District=FALSE, County=FALSE, Route=FALSE, Miles=FALSE, `2021`=FALSE, `2022`=FALSE, `2023`=FALSE, `2024`=FALSE, `2025`=FALSE))
 
