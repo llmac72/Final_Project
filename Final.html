@@ -381,30 +381,6 @@ summary {
 </div>
 <p><br></p>
 <p>The 5 Year Program was originally created as a pdf and exported to an excel spreadsheet. The conversion was a bit messy so quality assurance (QA) was done to ensure that project costs were correct and in the correct year. Several columns were added to the dataset including Iowa DOT District, county latitude and longitude and projects rescheduled in case the Highway Trust Funds becomes insolvent. We also <em>filled down</em> the project location and miles for each work type and renamed several columns. As each of us explored the data, we continued to make various changes/revisions specific to our individual analysis.</p>
-<pre class="r"><code>library(readxl)
-library(tidyverse)
-library(dplyr)
-library(formattable)</code></pre>
-<pre><code>## Warning: package &#39;formattable&#39; was built under R version 4.0.3</code></pre>
-<pre class="r"><code>FiveYear &lt;- read_excel(&#39;./2021_2025_5YrProg_Highway_Program.xlsx&#39;)
-IowaPop &lt;- read_excel(&#39;./Iowa_Population.xlsx&#39;)
-
-IowaPop &lt;- IowaPop %&gt;% 
-  separate(Area, c(&quot;subregion&quot;, NA, NA), sep=&quot; &quot;)</code></pre>
-<pre><code>## Warning: Expected 3 pieces. Additional pieces discarded in 6 rows [7, 11, 17,
-## 29, 74, 89].</code></pre>
-<pre class="r"><code>##str(FiveYear) 
-##names(FiveYear)
-
-FiveYear &lt;- FiveYear %&gt;% 
-  fill(Location, .direction = &quot;down&quot;) %&gt;% 
-  rename(District = `Iowa DOT District`, Route = `Project Route`, 
-         Work = `Type of Work`) %&gt;%
-  group_by(County, District, Route, Location) %&gt;%
-  fill(Miles, .direction = &quot;down&quot;) %&gt;%
-  mutate(District = as.numeric(District))
-  
-head(FiveYear)</code></pre>
 <pre><code>## # A tibble: 6 x 20
 ## # Groups:   County, District, Route, Location [6]
 ##   State County `Latitude\r\n(T~ `Latitude\r\n(D~ Latitude `Longitude\r\n(~
@@ -926,7 +902,7 @@ districts_2025 %&gt;% ggplot(aes(x = long, y = lat, fill=District)) + geom_polyg
 <li>adding in rows of data</li>
 <li>performing calculations</li>
 </ul>
-<p>The 5 Year Program identifies specific projects/costs whereas the asset management plan identifies funding based on the federal work types of construction, replacement, reconstruction, maintenance or preservation. To compare the 5 Year Program with the asset management plan I needed to sort the projects into the different federal work types.</p>
+<p>A significant difference between the 5 Year Program and the asset management program is that the 5 Year Program identifies specific projects/costs whereas the asset management plan identifies funding based on the federal work types of construction, replacement, reconstruction, maintenance or preservation. To compare the 5 Year Program with the asset management plan I needed to sort the projects into the different federal work types.</p>
 <p><font size="5"> Bridge Assets <font size="3"><br />
 Table 3-1 in the asset management plan, shown below, provides a crosswalk between the Iowa DOT’s bridge treatment or work as described in the 5 Year Program and the federal work types as defined by law.</p>
 <div align="center">
