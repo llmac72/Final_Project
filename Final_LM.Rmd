@@ -23,7 +23,7 @@ FiveYear <- FiveYear %>%
   fill(Location, .direction = "down") %>% 
   rename(District = `Iowa DOT District`, Route = `Project Route`, 
          Work = `Type of Work`) %>%
-  group_by(County, District, Route, Location) %>%
+  group_by(Location) %>%
   fill(Miles, .direction = "down") %>%
   mutate(District = as.numeric(District))
 
@@ -54,7 +54,7 @@ Created a dataframe containing only bridge and culvert projects list in the Iowa
 ```{r message=FALSE}
 
 Bridge <- FiveYear %>%
-  select(County, District, Route, Location, Miles, Work, `2021`,
+  select(Location, Miles, Work, `2021`,
          `2022`, `2023`, `2024`, `2025`) %>%
   filter(grepl(c("BRIDGE|CULVERT"), Work)) %>%
   mutate(FedWork = str_replace_all(Work, c("BRIDGE PAINTING|BRIDGE CLEANING" = "Preservation",

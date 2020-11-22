@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 The 5 Year program is prepared by the Iowa Department of Transportation (Iowa DOT) and identifies transportation projects planned for construction on a annual basis for a period of five years, in this case 2021-2025.  The program includes projects for aviation, transit, railroad, safety, trails and highway.  Project location, county, work type, route, length and annual construction costs are included in the program for each project listed.  The document is updated annually by removing completed projects, introducing new projects, revising project schedules and costs and rescheduling projects as needed.  It is approved by the Iowa DOT commission and provides transparency to the public by being available on the Iowa DOT's website. 
 
-Information in the 5 Year Program assists the Iowa DOT, local public agencies and the federal government in developing a budget, identify needs, project status, documentation requirements and staffing resources.  The document also makes it easier for organizations to compare estimated project costs with actual project costs and track project costs/status over the years, across the state/county and by project.  There is a lot of information in the 5 Year Program, so we focused our analysis on the highway program, which begins on page 50.
+Information in the 5 Year Program can assist the Iowa DOT, local public agencies and the federal government in developing a budget, identifying needs, project status, documentation requirements and staffing resources.  The document also makes it easier for organizations to compare estimated project costs with actual project costs and track project costs/status over the years, across the state/county and by project.  There is a lot of information in the 5 Year Program, so we focused our analysis on the highway program, which begins on page 50.
 
 <font size="5">**Dataset Overview**
 <font size="3">
@@ -26,16 +26,21 @@ The 5 Year Program can be found on the Iowa DOT's website at:
 
 The 5 Year Program was originally created as a pdf and exported to an excel spreadsheet.  The conversion was a bit messy so quality assurance (QA) was done to ensure that project costs were correct and in the correct year.  Several columns were added to the dataset including Iowa DOT District, county latitude and longitude and projects rescheduled in case the Highway Trust Funds becomes insolvent. We also *filled down* the project location and miles for each work type and renamed several columns.  As each of us explored the data, we continued to make various changes/revisions specific to our individual analysis.
 
-```{r message=FALSE, echo = TRUE, results = "hide"}
+```{r, message=FALSE, echo = FALSE, warning=FALSE}
 
 library(readxl)
 library(tidyverse)
 library(dplyr)
+library(formattable)
 
 FiveYear <- read_excel('./2021_2025_5YrProg_Highway_Program.xlsx')
+IowaPop <- read_excel('./Iowa_Population.xlsx')
 
-str(FiveYear) 
-names(FiveYear)
+IowaPop <- IowaPop %>% 
+  separate(Area, c("subregion", NA, NA), sep=" ")
+
+##str(FiveYear) 
+##names(FiveYear)
 
 FiveYear <- FiveYear %>% 
   fill(Location, .direction = "down") %>% 
@@ -45,6 +50,7 @@ FiveYear <- FiveYear %>%
   fill(Miles, .direction = "down") %>%
   mutate(District = as.numeric(District))
   
+head(FiveYear)
 
 ```
 
@@ -144,16 +150,105 @@ twentyfive <- inner_join(twentyfive, us_counties, by = "subregion")
 
 * What work types are associated with interchanges?  Costs? What routes are interchanges being proposed on?
 
-```{r }
+```{r, warning=FALSE, message=FALSE, include=FALSE }
+yearplan <- read_excel('./2021_2025_5YrProg_Highway_Program.xlsx')
+
+
+cleanplan <- yearplan %>%
+  fill(Location, .direction = "down") %>% 
+  rename(District = `Iowa DOT District`, Route = `Project Route`, 
+         Work = `Type of Work`) %>%
+  group_by(County, District, Route, Location) %>%
+  fill(Miles, .direction = "down") %>%
+  mutate(District = as.numeric(District)) %>%
+  select(State, County, District, Route, Location, 
+         Miles, Work, `2021`, `2022`, `2023`, `2024`, `2025`)
+cleanplan['totalProjection'] <- rowSums(cleanplan[, c("2021", "2022", "2023", "2024",
+                                                      "2025")], na.rm = TRUE)
+countyLines <- map_data("county")
+
+
+#Cleaning City Population data
+cities <- read_excel("./SUB-IP-EST2019-ANNRES-19.xlsx")
+cities <- cities %>% select(`table with row headers in column A and column headers in rows 3 through 4 (leading dots indicate sub-parts)`, `...13`) %>% 
+  rename(Population = "...13", Area = "table with row headers in column A and column headers in rows 3 through 4 (leading dots indicate sub-parts)")
+cities <- cities[-c(1,2,3),]
+cities <- cities %>% separate(Area, into = c("City", "State"), sep = ", ") %>% select(-State)
+```
+
+Work Types Associated with Interchanges
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+
+  
+interchange <- cleanplan %>% filter(grepl('INTERCHANGE', Location))
+
+interchange["County"] <- tolower(interchange$County)
+interchange["Route"] <- as.character(interchange$Route)
+
+interchange %>% group_by(Work) %>% summarise(sum = n()) %>% 
+  ggplot(aes(x=Work, weight=sum)) + geom_bar() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  labs(title = "Count of Interchange Work Plans per Work Type", x = "Type of Work")
 
 ```
+
+Bridge Deck Overlays seem to be the most common type of work on the interchanges. It seems that a great number of planned projects are related to maintenance or additions for the sake of drivers (traffic signs, traffic signals, lighting).
+
+Costs of projects Involving interchanges
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+
+plot1 <- interchange %>% ggplot(aes(y = totalProjection, x= Work)) + geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) + 
+  labs(x = "Type of Work", y = "Cost in Thousands of Dollars", title = "Cost of Projects by Type of Work")
+  
+plot1
+
+plot1 + coord_cartesian(ylim = c(20, 16000))
+```
+
+The first chart shows that the grade and pave and new bridge projects are the most expensive. Now we zoom in the plot ignoring the outliers to better see the other categories. From this chart we can see that most of the projects are relatively cheap in comparison (under 15 million dollars), with only bridge replacement, grading, and paving projects frequently approaching the this upper bound.
+
+Counties with Proposed Interchanges
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+
+iowaLines <- countyLines %>% filter(region == "iowa")
+iowaLines <- iowaLines %>% select(long, lat, group, order, subregion)
+joinedInter <- iowaLines %>% left_join(interchange, by = c(subregion = "County"))
+
+joinedInter["presentInIntersectionData"] <- ifelse(is.na(joinedInter$District), "no", "yes")
+
+
+joinedInter %>% ggplot(aes(x = long, y = lat, fill = presentInIntersectionData)) + 
+  geom_polygon(aes(group = group)) + coord_map() #+ theme_map()
+
+```
+
+![Retreived from http://ontheworldmap.com/usa/state/iowa/iowa-road-map.html](iowa-road-map.jpg)
+
+The upper of the two charts is a map that highlights counties that have planned interchange projects within their borders. Meanwhile, the lower of the two charts is a state map containing the major highways of Iowa. In it, the blue highways are the interstate highways, and the highlighted counties match up with the counties along the route of the interstates. This shows us that most interchanges are on the interstates, meaning routes 29, 35, 80, and 380.
+
+Routes with proposed interchanges
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+
+routeData <- interchange %>% group_by(Route) %>% summarise(sum = n())
+routeData["Route"] <- factor(routeData$Route, levels = c("6", "9", "20", "25", "29", "30", "35", "59", 
+                                                         "74", "80", "141", "235", "280", "380"))
+routeData %>% ggplot(aes(x= Route, weight = sum)) + geom_bar() + 
+  labs(title = "Count of Interchange Plans by Route")
+```
+
+The previous assumption can be shown in this chart, which shows the routes interchanges are planned for. 29, 35, 80, and 380 are the routes with the most interchanges, and the other routes are likely the routes 29, 35, 80, or 380 are interchanging with.
 
 ## Adam Brandt
 
 <font size="3"> 
 
 * Projects < $50 million, projects > $50 million & < $100 million, major projects > $100.  What is the most expensive project in each District?  The least expensive?
-```{r }
+```{r}
 projects <- FiveYear %>% 
   select(District, County, Route, 'Latitude\r\n(Decimal(', "Longitude\r\n(Decimal)", "2021", "2022", "2023", "2024", "2025") %>%
   mutate(subregion = tolower(County)) %>% 
@@ -186,10 +281,9 @@ There are 629 projects that are less than $50 million, 6 projects that are betwe
 
 <font size="3"> 
 
-* Project types and costs between Iowa DOT Districts and years.
+An important part of any budget from year to year is comparing it and seeing where the money is going. In this five year plan the money can be analyzed in different ways. One of these ways is by looking at the DOT districts. There are 6 districts in Iowa. The graphs in this next section look at the districts and groups the counties by DOT district and adds up the total budget of all projects in those counties. So the question that I am trying to answer is what does the spending break down look like by DOT district and what is the spending breakdown by person per DOT district. I will get into these two questions below. 
 
-```{r}
-head(FiveYear)
+```{r message=FALSE, echo=FALSE, fig.align='center'}
 districts <- FiveYear %>% 
   select(County, District) %>% 
   mutate(subregion = tolower(County))
@@ -211,7 +305,7 @@ ia <- inner_join(ia, districts, by="subregion")
 
 districts_2021 <- inner_join(districts_2021, ia, by = "District")
 
-districts_2021 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1)
+districts_2021 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1)+ ggtitle("DOT Districts 2021")
 
 districts_2022 <- FiveYear %>% 
   select(District, County,'Latitude\r\n(Decimal(', "Longitude\r\n(Decimal)","2022") %>%
@@ -225,7 +319,7 @@ districts_2022_totals <- districts_2022
 
 districts_2022 <- inner_join(districts_2022, ia, by = "District")
 
-districts_2022 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1)
+districts_2022 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1)+ ggtitle("DOT Districts 2022")
 
 # 2023
 districts_2023 <- FiveYear %>% 
@@ -240,7 +334,7 @@ districts_2023_totals <- districts_2023
 
 districts_2023 <- inner_join(districts_2023, ia, by = "District")
 
-districts_2023 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1)
+districts_2023 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1)+ ggtitle("DOT Districts 2023")
 
 # 2024
 districts_2024 <- FiveYear %>% 
@@ -255,7 +349,7 @@ districts_2024_totals <- districts_2024
 
 districts_2024 <- inner_join(districts_2024, ia, by = "District")
 
-districts_2024 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1)
+districts_2024 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1) + ggtitle("DOT Districts 2024")
 
 # 2025
 districts_2025 <- FiveYear %>% 
@@ -270,11 +364,12 @@ districts_2025_totals <- districts_2025
 
 districts_2025 <- inner_join(districts_2025, ia, by = "District")
 
-districts_2025 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1)
+districts_2025 %>% ggplot(aes(x = long, y = lat, fill=District)) + geom_polygon(aes(group=group,fill = total), color="gray60", size=0.1) + ggtitle("DOT Districts 2025")
 
 ```
+In the year 2021 the Iowa DOT is spending around 782 million dollars on different projects. The majority of the spending being in districts 4 and 6. District 6 is where the Iowa capital, Iowa City, is and makes sense why that has a lot of money being spent on infrastructure. In 2022 The spending goes down from 782 million to 572 million dollars. The majority of the spending staying focused in the districts of 4 and 6. One reason for this could be that in 2022 the projects are starting to finish up and have less expensive work to be done and have gaps in between projects resulting in a little less spending for the year. In 2023 the total spending is 567 million. Now that we have two years with upper 500 million dollars spent we can start to determine what is the average spending per year and what years are outliers. To really understand the totals we need to also look at the totals in 2024 and 2025 which are 530 million and 511 million dollars respectively. This goes to show that the year 2021 is in fact an outlier and Iowa normally spends around 500-600 million dollars on projects a year. This could be a result of a bigger project that needs to get done starting in 2021 or multiple projects needing to be done that normally are not done on a year to year basis.
 
-```{r}
+```{r message=FALSE, echo=FALSE, fig.align='center'}
 FiveYear_Pop <- left_join(FiveYear, IowaPop, by=c("County"="subregion")) %>% 
   rename(population = "2019") %>% 
   group_by(District) %>% 
@@ -301,6 +396,7 @@ districts_2025_totals <- left_join(districts_2025_totals, FiveYear_Pop)
 districts_2025_totals %>% 
   mutate(spent_per_pop = (total* 1000) / total_pop)
 ```
+Next I looked at the total spending per year based on the total population by DOT district. Based on the previous finding of 2021 being the most expensive year by over 100 million dollars it makes sense that when looking at a per population basis the spending had the highest numbers in 2021. In 2021 not only was the highest district at 620 dollars per person it was also the year that had 4 of the 6 districts above 200 dollars per person. None of the other years had 200 or more dollars per person for 4 districts the most was 3. The important thing about looking at it as a per person basis shows us how much benefit each county is getting. If one county has 600 dollars spent per person then there must be some heavy focus there and the roads in other districts that could use repaving or other maintance may not be getting the work that needs to be done. The fact that as the years go up it gets closer to being even between the counties on a per person basis shows the money is being spread out throughout Iowa. This should help people to see their tax dollars at work fixing their roads and bridges. 
 
 ## Lisa McDaniel
 
@@ -308,36 +404,246 @@ districts_2025_totals %>%
 
 So we've seen the impacts of the 5 Year Program at a state level but how can the program be used at a national level?
 
-The code of federal regulation, 23 CFR 515,  requires states to develop an asset management plan that describes how they will manage the national highway system in a financially responsible manner.  There are a lot of requirements in developing the asset management plan, including how other planning documents, such as the 5 Year Program, contribute to managing their assets.  By law, the Iowa DOT only has to include bridge/culvert and pavement assets.  Implementation of the asset management plan is reviewed on an annual basis.  There are penalties if states don't develop and implement an asset management plan according to federal law.
+The code of federal regulation, 23 CFR 515,  requires states to develop an asset management plan that describes how they will manage the national highway system in a financially responsible manner.  There are a lot of requirements in developing the asset management plan, including how other planning documents, such as the 5 Year Program, contributes to managing their assets.  By law, the Iowa DOT only has to include bridge/culvert and pavement assets.  Implementation, which is based on expenditures, is reviewed on an annual basis.  There are penalties if states don't develop and implement an asset management plan according to federal law.
 
 The analysis I performed focuses on how the Iowa DOT's 5 Year program contributes to managing their bridge and pavement assets and compares funding levels in the 5 Year Program to those in the asset management plan.
 
 The Iowa DOT's asset management plan was approved last in 2019 and can be found on their website at:
 
-<div align="center">https://iowadot.gov/systems_planning/fpmam/IowaDOT-TAMP-2019.pdf</div><br>
+<div align="center">https://iowadot.gov/systems_planning/fpmam/IowaDOT-TAMP-2019.pdf</div>
+<div align="left">  
 
-* How/do bridge/culvert work types relate to the federal work types:  construction, replacement, reconstruction, maintenance or preservation?  
+The following questions related to bridge and pavement assets, were explored to determine if there is a relationship between the 5 Year Program and the asset management plan:  
 
-* How do funding levels in the 5 Year Program compare to those in the Asset Management Plan?
+* How/do bridge/culvert and pavement work types in the 5 Year Program relate to the federal work types required by law in the asset management plan:  construction, replacement, reconstruction, maintenance or preservation?  
 
-* Compare the five year total of the 5 Year Program to the Asset Management Plan
+* How do funding levels in the 5 Year Program compare to those in the asset management plan?
 
-<font size="5"> Bridge Assets
+* Compare the five year total of the 5 Year Program to the asset management plan.
 
-```{r }
+Additional data cleaning and wrangling performed as a part of the analysis included:
+
+* adding/removing/renaming/filtering/formatting columns
+* mutating column types
+* using pivot_longer to allow grouping data in a different way format and perform calculations
+* adding in rows of data
+* performing calculations
+
+A significant difference between the 5 Year Program and the asset management program is that the 5 Year Program identifies specific projects/costs whereas the asset management plan identifies funding based on the federal work types of construction, replacement, reconstruction, maintenance or preservation.  To compare the 5 Year Program with the asset management plan I needed to sort the projects into the different federal work types. 
+
+<font size="5"> Bridge Assets  <font size="3">  
+Table 3-1 in the asset management plan, shown below, provides a crosswalk between the Iowa DOT's bridge treatment or work as described in the 5 Year Program and the federal work types as defined by law.
+
+<div align="center"> <img src="./Table3_1.jpeg" width="400" height="600" /> 
+
+<div align="left">  
+Based on the information in the table above, I was able to sort the bridge/culvert projects in the 5 Year Program into the federal work types of construction, replacement, reconstruction, maintenance or preservation.  
+
+```{r echo=FALSE}
+
+Bridge <- FiveYear %>% 
+  select(District, County, Route, Location, Miles, Work, `2021`, `2022`, `2023`, `2024`, `2025`) %>% 
+  filter(grepl(c("BRIDGE|CULVERT"), Work)) %>%
+  mutate(FedWork = str_replace_all(Work, c("BRIDGE PAINTING|BRIDGE CLEANING" = "Preservation",
+                                           "CULVERT EXTENSION|CULVERT REPAIR" = "Maintenance",
+                                      "BRIDGE DECK OVERLAY|BRIDGE REHABILITATION" = "Rehabilitation",
+                            "BRIDGE REPLACEMENT|CULVERT REPLACEMENT|BRIDGE REMOVAL" = "Replacement",
+                        "BRIDGE NEW|CULVERT NEW|PIPE CULVERTS|BRIDGE WIDENING" = "Construction"))) %>%
+  rename(`5 Year Program` = Work, `Asset Mgmt` = FedWork)
+  
+##data.frame(head(Bridge))
+
+b <- formattable(Bridge, list(District=FALSE, County=FALSE, Route=FALSE, Miles=FALSE, `2021`=FALSE, `2022`=FALSE, `2023`=FALSE, `2024`=FALSE, `2025`=FALSE))
+
+head(b)
 
 ```
+
+Table 6-3 in the asset management plan, shown below, shows the bridge and pavement funding levels by federal work type for 2019 - 2025.
+
+<div align="center"> <img src="./Table6_3.jpeg" width="600" height="400" /> 
+
+<div align="left">  
+
+Using the information in the table above, I compared the funding levels in the 5 Year Program and asset management plan based on the federal work types.  Nothing really stands outs in this comparison; the strongest relationship between the two plans appears to be between the funding levels for rehabilitation and replacement. 
+
+```{r message=FALSE, echo=FALSE, fig.height=12, fig.width=16}
+Bri1 <- Bridge %>%
+  group_by(`Asset Mgmt`) %>%
+  summarise(`20215YrPlan` = sum(`2021`/1000, na.rm = TRUE),
+            `20225YrPlan` = sum(`2022`/1000, na.rm = TRUE), 
+            `20235YrPlan` = sum(`2023`/1000, na.rm = TRUE), 
+            `20245YrPlan` = sum(`2024`/1000, na.rm = TRUE),
+            `20255YrPlan` = sum(`2025`/1000, na.rm = TRUE)) %>%
+  add_column(`2021Asset` = c(43, 1, 5, 28, 133),
+             `2022Asset` = c(72, 1, 6, 32, 152),
+             `2023Asset` = c(17, 1, 5, 25, 119),
+             `2024Asset` = c(8, 1, 6, 32, 153),
+             `2025Asset` = c(25, 1, 6, 35, 163)) %>%
+  pivot_longer(`20215YrPlan`:`2025Asset`, names_to="Year", 
+               values_to = "Cost") %>%
+  mutate(Plan = str_replace_all(Year, c("20215YrPlan|20225YrPlan|20235YrPlan|20245YrPlan|20255YrPlan" = "5 Year",
+                      "2021Asset|2022Asset|2023Asset|2024Asset|2025Asset" = "Asset Management"))) %>%
+  mutate(Year2 = str_replace_all(Year, c("20215YrPlan|2021Asset" = "2021", "20225YrPlan|2022Asset" ="2022", 
+                                "20235YrPlan|2023Asset" = "2023", "20245YrPlan|2024Asset" = "2024", 
+                                        "20255YrPlan|2025Asset" = "2025"))) %>%
+  select(-Year) %>%
+  rename(Year = Year2) %>%
+  mutate(Year = as.numeric(Year))
+
+
+ggplot(Bri1, aes(Year, Cost, fill=Plan)) + 
+  geom_bar(stat='identity', position = "dodge") + 
+  ggtitle("Bridge Assets\n 5 Year Program vs Asset Management Plan") + 
+  labs(y="Cost, $Millions", x="") +
+  theme(axis.text.x = element_text(angle = 90, size = 14, vjust = 0.2, hjust = 1)) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.ticks.y=element_blank()) +
+  theme(axis.text.y = element_blank()) +
+  facet_wrap(~`Asset Mgmt`, scales = "free") +
+  geom_text(aes(x=Year,y=Cost,label=paste("$",Cost)), 
+            position = position_dodge(0.9), vjust=-0.5, hjust=0.6, size=4) +
+   theme(legend.key.size = unit(1, 'cm'),
+      legend.key.height = unit(1, 'cm'),
+      legend.key.width = unit(1, 'cm'),
+      legend.title = element_text(size=20),
+      legend.text = element_text(size=18)) +
+  theme(axis.title=element_text(size=18)) +
+  theme(plot.title = element_text(size=24)) +
+  theme(strip.text.x = element_text(size = 20))
+ 
+```
+
+Projects/cost and funding levels can fluctuate, sometimes significantly, from year to year depending on need, so it may be hard to determine if there is any correspondence between the two plans on an annual basis by work type.  Analyzing cumulative funding levels for each work type during the five year period may be a better indicator of the relationship between the two plans.
+
+The figure below shows the five year funding levels between the 5 Year Program and asset management plan by work type.  Maintenance, replacement and rehabilitation funding levels are greater in the 5 Year Program (18.5%, 35% and 5.8%, respectively) and funding levels for construction and preservation are greater in the asset management plan (36% and 45%, respectively).
+
+```{r, message=FALSE, echo=FALSE, fig.height=10, fig.width=14, fig.align='center'}
+
+Bri1a <- Bri1 %>%
+  group_by(`Asset Mgmt`, Plan) %>%
+  summarise(Cost = sum(Cost)) %>%
+  mutate(Cost = round(Cost, 2))
+
+ggplot(Bri1a, aes(`Asset Mgmt`, Cost, fill = Plan)) + 
+  geom_bar(stat='identity', position="dodge") + 
+  ggtitle("Bridge Assets\n Funding Levels Over the 5 Year Period") + 
+  labs(x="", y="Cost, $Millions") +
+  theme(axis.text.x = element_text(angle = 90, size = 16, vjust = 0.2, hjust = 1)) +
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme(axis.ticks.y=element_blank()) +
+  theme(axis.text.y = element_blank()) +
+  geom_text(aes(x=`Asset Mgmt`,y=Cost,label=paste("$",Cost)), 
+            position = position_dodge(0.9), vjust=-0.5, hjust=0.6, size=6) +
+  theme(legend.key.size = unit(1, 'cm'),
+      legend.key.height = unit(1, 'cm'),
+      legend.key.width = unit(1, 'cm'),
+      legend.title = element_text(size=18),
+      legend.text = element_text(size=16)) +
+  theme(axis.title=element_text(size=16)) +
+  theme(plot.title = element_text(size=22))
+
+
+```
+
+Over the five year period, the difference in total funding between the two plans is about 5.3%, for bridge assets, with slightly more funding identified in the 5 Year Program.  The difference between the two plans could be due to contingency or not including items, such as landscaping, lighting or mitigation that may be a part of a project, but included in a different contract.
+
+```{r message=FALSE, echo=FALSE}
+
+Bri1b <- Bri1a %>%
+  group_by(Plan) %>%
+  summarise(FiveYear = round((sum(Cost)/1000), 2)) %>%
+  rename('Cost ($Billions)' = FiveYear)
+
+Bri1b
+
+```
+
+Both documents are used primarily for planning purposes and are intended to provide an estimate of funding levels which are impacted by changes due to need, priority and available funding.  Analyzing the cumulative difference in funding levels over the five year period may be the best approach to defining a relationship between the plans. 
 
 <font size="5"> Pavement Assets
 
 <font size="3"> 
 
-* How/do pavement work types relate to the federal work types:  construction, replacement, reconstruction, maintenance or preservation?  
+Table 3-2 in the Iowa DOT's asset management plan, shown below, provides a crosswalk between the pavement treatments, or work as described in the 5 Year Program, and the federal work types.
 
-* How do funding levels in the 5 Year Program compare to those in the Asset Management Plan?
+<div align="center"> <img src="./Table3_2.jpeg" width="400" height="600" /> 
 
-* Compare the five year total of the 5 Year Program to the Asset Management Plan
+<div align="left">  
 
-```{r }
+Using a process similar to the one described for the bridge asset comparison, I began to sort the pavement projects in the 5 Year Program into the federal work types.  Unfortunately, the pavement work, described in the 5 Year Program, isn't as detailed as the bridge work and I wasn't able to categorize the pavement projects by federal work type.  Consequently, I also wasn't able to compare the funding levels by work type in the 5 Year Program with those in the asset management plan.  This doesn't mean tha the 5 Year Program is wrong or that the asset management plan doesn't comply with federal regulation.  It just mean that it work take some work to be able to determine if the pavement projects in the 5 Year Program relate to the funding levels of the pavement assets described in the asset management plan.  
+
+Just because I couldn't sort the pavement projects in the 5 Year Program into the federal work types in the asset management plan doesn't mean that I wasn't able to compare annual funding levels between the two plans.  
+
+```{r message=FALSE, echo=FALSE, fig.height=8, fig.width=12, fig.align='center'}
+
+Pavement <- FiveYear %>%
+  select(County, District, Route, Location, Miles, Work, `2021`,
+         `2022`, `2023`, `2024`, `2025`) %>%
+  filter(grepl(c("GRADE|PAVE|PAVING|PAVEMENT|GRADING|RIGHT|SLOPE|TRAFFIC|EROSION|BARRIER|MISCELLANEOUS|NOISE"), Work))
+
+Pave1 <- Pavement %>%
+  pivot_longer('2021':'2025', names_to='Year', values_to='Cost') %>%
+  filter(Cost != "NA") %>%
+  group_by(Year) %>%
+  summarise(Cost = sum(Cost)/1000) %>%
+  mutate(Cost = round(Cost, 2)) %>%
+  add_column(Plan = c( "5 Year", "5 Year", "5 Year", "5 Year", "5 Year")) %>%
+  relocate(Plan) %>%
+  add_row(Cost = c(511, 388, 535, 478, 459), 
+          Plan = c("Asset Mgmt", "Asset Mgmt", "Asset Mgmt", "Asset Mgmt", "Asset Mgmt"), 
+          Year = c("2021", "2022", "2023", "2024", "2025"))
+
+ggplot(Pave1, aes(Year, Cost, fill = Plan)) + 
+  geom_bar(stat='identity', position="dodge") + 
+  ggtitle("Pavement Assets\n Funding Levels Over the 5 Year Period") + 
+  labs(x="", y="Cost, $Millions") +
+  theme(axis.text.x = element_text(angle = 90, size = 14, vjust = 0.2, hjust = 1)) +
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  theme(axis.ticks.y=element_blank()) +
+  theme(axis.text.y = element_blank()) +
+  geom_text(aes(x=Year,y=Cost,label=paste("$",Cost)), 
+            position = position_dodge(0.9), vjust=-0.5, hjust=0.6, size=6) +
+  theme(legend.key.size = unit(1, 'cm'),
+      legend.key.height = unit(1, 'cm'),
+      legend.key.width = unit(1, 'cm'),
+      legend.title = element_text(size=18),
+      legend.text = element_text(size=16)) +
+  theme(axis.title=element_text(size=16)) +
+  theme(plot.title = element_text(size=22))
+
 
 ```
+
+The figure above shows the funding level of the 5 Year program in 2021 is about 7% more then the documented funding level in the asset management plan.  For the remaining years, 2022 - 2025, the funding level in the asset management plan is more than what is documented in the 5 Year Program; any where from 22-38% difference.
+
+Over the five year period, there is a difference of over 20% between the two plans.  This leads me to further believe there is something else going on with the pavement projects listed in the 5 Year Program that isn't easily identified without discussions with the Iowa DOT.
+
+```{r message=FALSE, echo=FALSE}
+
+Pave2 <- Pave1 %>%
+  group_by(Plan)%>%
+  summarise(Cost = round((sum(Cost)/1000), 2)) %>%
+  rename('Cost ($Billions)' = Cost)
+
+Pave2
+ 
+```
+
+<font size="5"> Conclusion
+
+<font size="3"> 
+
+The Iowa DOT 5 Year Program contains a wealth of information on construction projects planned between 2021-2025.  Number/type of project, location, county, Iowa DOT District, route, estimated project costs and the relationship between the 5 Year Program and Asset Management plan were explored.  The following conclusions were developed based on the analysis:
+
+*  There are 639 projects in the 5 Year program with bridge deck overlay and bridge replacement being the most common type of work planned.
+*  Polk, Pottawattamie and Linn counties have the most projects planned during 2021-2025.  These counties also have the most spending over the 5 year period, supporting the number of projects planned.  Two of the top three most expensive projects are located in Polk and Pottawattamie counties. 
+*  Interchange projects are typically less then $15 million with most of the money being spent on bridge (new or replacement), grading and pavement.  Most of the interchange work is concentrated on the interstates (I-29, I-35, I-80, I-380).
+*  The most expensive project is the I-29/80/480 interchange in Council Bluffs at $319,603,000.
+*  The least expensive project is 1.8 mile west of the Des Moines River to west of Snedden Drive at $2,000.
+*  629 projects cost less than $50 million, 6 project cost between $50 million and $100 million and 4 projects cost greater than $100 million.
+*  District 4 has the most spending per person during 2021 and 2022.  In the remaining years the spending per person starts to be more evenly distributed among the districts.  
+*  For bridge assets, there is a relationship between the funding in the 5 Year Program and the asset management program.  The difference between the funding levels is about 5.3% over the 5 year period.
+*  For the pavement assets, a relationship between the two documents is not easily identified without further discussions with the Iowa DOT.
+
+Conclusions developed from the analysis of the 5 Year Program describe the work type and location of projects within Iowa.  The information can be used to determine project status/cost, documentation requirements, staffing resources and funding levels planned to manage bridge and pavement assets.
