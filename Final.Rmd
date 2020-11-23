@@ -254,7 +254,7 @@ The previous assumption can be shown in this chart, which shows the routes inter
 <font size="3"> 
 
 * Projects < $50 million, projects > $50 million & < $100 million, major projects > $100.  What is the most expensive project in each District?  The least expensive?
-```{r}
+```{r message=FALSE, echo=FALSE, fig.align='center'}
 projects <- FiveYear %>% 
   select(District, County, Route, 'Latitude\r\n(Decimal(', "Longitude\r\n(Decimal)", "2021", "2022", "2023", "2024", "2025") %>%
   mutate(subregion = tolower(County)) %>% 
@@ -636,6 +636,12 @@ Pave2
  
 ```
 
+<font size="5"> Contributions
+
+<font size="3"> 
+
+In this project the entire team worked together and communicated throughout the project. Everyone got their work done on the agreed upon times and the quality of work was great. Lisa was the one who had the idea for the data set to look at and helped do a lot of the cleaning and helping us understand the data we were looking at. Colin as the project coordinator made sure everyone got their work done and everything was submitted on time. Everyone else had equaly contribution and everyone participated in reviewing and checking each other's work. 
+
 <font size="5"> Conclusion
 
 <font size="3"> 
@@ -648,8 +654,9 @@ The Iowa DOT 5 Year Program contains a wealth of information on construction pro
 *  The most expensive project is the I-29/80/480 interchange in Council Bluffs at $319,603,000.
 *  The least expensive project is 1.8 mile west of the Des Moines River to west of Snedden Drive at $2,000.
 *  629 projects cost less than $50 million, 6 project cost between $50 million and $100 million and 4 projects cost greater than $100 million.
-*  District 4 has the most spending per person during 2021 and 2022.  In the remaining years the spending per person starts to be more evenly distributed among the districts.  
+*  District 4 has the most spending per person during 2021 and 2022.  In the remaining years the spending per person starts to be more evenly distributed among the districts.
+*  District 6 has some of the highest spending of all DOT districts but it is also the location of the state capital with a lot of the population of Iowa focused in the DOT districts of 6 and 
 *  For bridge assets, there is a relationship between the funding in the 5 Year Program and the asset management program.  The difference between the funding levels is about 5.3% over the 5 year period.
 *  For the pavement assets, a relationship between the two documents is not easily identified without further discussions with the Iowa DOT.
 
-Conclusions developed from the analysis of the 5 Year Program describe the work type and location of projects within Iowa.  The information can be used to determine project status/cost, documentation requirements, staffing resources and funding levels planned to manage bridge and pavement assets.
+Conclusions developed from the analysis of the 5 Year Program describe the work type and location of projects within Iowa.  The information can be used to determine project status/cost, documentation requirements, staffing resources and funding levels planned to manage bridge and pavement assets. The conclusions developed from this analysis, while only used as practice, can and most likely will be used in the work that one of our group members participates in. Being able to work on a fairly large and informative data set was interesting and with the possiblity of real world applications a unique and cool experience. 
