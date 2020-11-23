@@ -61,7 +61,7 @@ head(FiveYear)
 
 * Type, number, route, and location by County and estimated costs of projects planned between 2021 – 2025.  Where is the money going and how much?
 
-```{r }
+```{r message=FALSE, echo=FALSE, fig.align='center' }
 states <- map_data('state')
 us_counties <- map_data("county")
 
@@ -143,6 +143,12 @@ twentyfive <- inner_join(twentyfive, us_counties, by = "subregion")
  county <- FiveYear %>% select(County) %>% group_by(County) %>% tally() %>% arrange(desc(n))
  county
 ```
+
+These charts show the different projects and how much money is going to go into each county for the next five years. Over the next five years Iowa will be working on many bridge projects. There are over 400 bridge projects that are gonna be worked on. With bridge deck overlay being the most worked on. If bridges are not being worked on then there is right of way and pavement projects that are coming up to work on Iowa's infrastructure.
+
+From the dataset we can see which counties has the most projects coming up. To no surprise Polk county has the most projects projected to happen with 67 total projects to work on. This makes sense since Polk county holds des moines and a bunch of suburbs that has a lot of people living there. With all these factors there is going to be a need for a lot of projects for the roads their. THe county with the second most projects is Pottawattamie at 55. Im not really familiar with that area, but it has 55 upcoming projects which is not far off from Polk county.
+
+Finally in the next two years Pottawattamie county is spending the most money on road projects. Over 150 million dollars in the next year and they are doing the same thing the following year. There is no county that is close to spending that much. Johnson county does spend some money, but not as much as Pottawattamie. They are consistent with their spending over the next five years. On the third year Polk county starts their projects as the spending in that county shoots up from years 3 to 5. As they are spending about 300 million dollars on road projects those three years.
 
 ## John King
 
